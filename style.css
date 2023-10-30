@@ -752,6 +752,7 @@ cursor: pointer;
     padding: .5rem 1rem;
     font-weight: var(--font-medium);
     transition: border .4s, background-color .4s;
+    text-transform: capitalize;
 }
 .contact__input::placeholder{
     color: var(--text-color-light);
@@ -836,4 +837,12 @@ cursor: pointer;
 }
 .contact__social-link:hover{
     background-color: var(--first-color);
+}
+
+.contact__message{
+    color: var(--white-color);
+    font-size: var(--small-font-size);
+    position: absolute;
+    bottom: 0;
+    left: 0;
 }
