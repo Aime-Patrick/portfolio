@@ -38,7 +38,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       <div className="w-full h-48 overflow-hidden flex items-center justify-center bg-gray-100">
         <img
           src={image}
-          alt={title}
+          alt={`Screenshot of project: ${title}`}
           className="object-cover w-full h-full"
           style={{ minHeight: "12rem", maxHeight: "12rem" }}
         />

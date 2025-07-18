@@ -41,9 +41,9 @@ const projects = [
 ];
 
 const ProjectsSection: React.FC = () => (
-	<section className="projects__content section" id="project">
+	<section className="projects__content section" id="project" aria-label="Projects section">
 		<h2 className="section__title-1">
-			<span>Projects.</span>
+			<span>Projects</span>
 		</h2>
 		<div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 container place-items-center">
 			{projects.map((project, idx) => (

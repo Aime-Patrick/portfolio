@@ -26,9 +26,9 @@ const services = [
 ];
 
 const ServicesSection: React.FC = () => (
-  <section className="services section" id="services">
+  <section className="services section" id="services" aria-label="Services section">
     <h2 className="section__title-2">
-      <span>Services.</span>
+      <span>Services</span>
     </h2>
     <div className="services__container container grid">
       {services.map((service, idx) => (

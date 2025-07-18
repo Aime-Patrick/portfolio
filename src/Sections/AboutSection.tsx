@@ -2,23 +2,23 @@ import React from "react";
 import { FaLinkedin } from "react-icons/fa";
 
 const AboutSection: React.FC = () => (
-  <section className="about section" id="about">
+  <section className="about section" id="about" aria-label="About section">
     <div className="about__container container grid">
       <h2 className="section__title-1">
-        <span>About Me.</span>
+        <span>About Me</span>
       </h2>
       <div className="about__perfil">
         <div className="about__image">
           <img
             src="/IMG_2949.jpg"
-            alt="image"
+            alt="Aime Patrick Ndagijimana working at a desk"
             className="about__img"
           />
           <div className="about__shadow"></div>
           <div className="geomatric-box"></div>
           <img
             src="/random-lines.svg"
-            alt="line"
+            alt="Decorative random lines"
             className="about__line"
           />
           <div className="about__box"></div>
@@ -39,7 +39,7 @@ const AboutSection: React.FC = () => (
           </li>
         </ul>
         <div className="about__buttons">
-          <a href="#contact" className="button">
+          <a href="#contact" className="button" aria-label="Contact Aime Patrick Ndagijimana">
             <i className="ri-send-plane-line"></i>
             Contact Me
           </a>
@@ -48,6 +48,7 @@ const AboutSection: React.FC = () => (
             target="_blank"
             rel="noopener noreferrer"
             className="button__ghost"
+            aria-label="LinkedIn profile of Aime Patrick Ndagijimana"
           >
             <FaLinkedin />
           </a>

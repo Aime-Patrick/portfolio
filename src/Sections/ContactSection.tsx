@@ -30,11 +30,11 @@ const ContactSection: React.FC = () => {
   };
 
   return (
-    <section className="contact section" id="contact">
+    <section className="contact section" id="contact" aria-label="Contact section">
       <div className="contact__container grid">
         <div className="contact__data">
           <h2 className="section__title-2">
-            <span>Contact Me.</span>
+            <span>Contact Me</span>
           </h2>
           <p className="contact__description-1">
             I will read all emails. Send me any message you want and I'll get back to you
@@ -46,7 +46,7 @@ const ContactSection: React.FC = () => {
         </div>
         <div className="contact__mail">
           <h2 className="contact__title">Send Me A Message</h2>
-          <form className="contact__form" id="contact-form" ref={form} onSubmit={sendEmail}>
+          <form className="contact__form" id="contact-form" ref={form} onSubmit={sendEmail} aria-label="Contact form">
             <div className="contact__group">
               <div className="contact__box">
                 <input
@@ -108,7 +108,7 @@ const ContactSection: React.FC = () => {
         <div className="contact__social">
           <img
             src="curved-arrow.svg"
-            alt=""
+            alt="Curved arrow pointing to social links"
             className="contact__social-arrow"
           />
           <div className="contact__social-data">
@@ -117,7 +117,7 @@ const ContactSection: React.FC = () => {
                 Write me on my social networks
               </p>
             </div>
-            <div className="flex gap-4 items-center justify-center">
+            <div className="flex gap-4 items-center justify-center" aria-label="Social links">
                 <SocialLinks variant="contact" />
             </div>
           </div>
