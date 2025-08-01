@@ -3,35 +3,48 @@ import emailjs from "@emailjs/browser";
 import SocialLinks from "../components/socialLinks";
 import toast from 'react-hot-toast'
 import { RiSendPlaneFill } from "react-icons/ri";
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 const ContactSection: React.FC = () => {
   const form = useRef<HTMLFormElement>(null);
 
-  const sendEmail = (e: React.FormEvent<HTMLFormElement>) => {
+  const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!form.current) return;
 
-    emailjs
-      .sendForm(
+    try {
+      // Send email via EmailJS
+      await emailjs.sendForm(
         "service_kzutdjf",
         "template_h8w87eq",
         form.current,
         "mbdQfTjlWxjvdh2ij"
-      )
-      .then(
-        () => {
-          toast.success("Message sent successfully");
-          form.current?.reset();
-        },
-        () => {
-          toast.error("Message not sent (service error)");
-          form.current?.reset();
-        }
       );
+      
+      // Save message to Firebase
+      const formData = new FormData(form.current);
+      await addDoc(collection(db, 'messages'), {
+        name: formData.get('user_name'),
+        email: formData.get('user_email'),
+        subject: formData.get('user_subject'),
+        message: formData.get('user_message'),
+        timestamp: serverTimestamp(),
+        read: false,
+        starred: false
+      });
+      
+      toast.success("Message sent successfully");
+      form.current?.reset();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error("Message not sent (service error)");
+      form.current?.reset();
+    }
   };
 
   return (
     <section className="contact section" id="contact" aria-label="Contact section">
-      <div className="contact__container grid">
+      <div className="contact__container !grid">
         <div className="contact__data">
           <h2 className="section__title-2">
             <span>Contact Me</span>
@@ -117,7 +130,7 @@ const ContactSection: React.FC = () => {
                 Write me on my social networks
               </p>
             </div>
-            <div className="flex gap-4 items-center justify-center" aria-label="Social links">
+            <div className="!flex !gap-4 !items-center !justify-center" aria-label="Social links">
                 <SocialLinks variant="contact" />
             </div>
           </div>

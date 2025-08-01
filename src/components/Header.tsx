@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import ThemeToggle from "../components/ThemeToggle";
 import { IoMenu } from "react-icons/io5";
 import { IoClose } from "react-icons/io5";
+import { useSiteSettings } from "./SiteSettingsProvider";
 const Header: React.FC = () => {
+  const { settings } = useSiteSettings();
   const [showMenu, setShowMenu] = useState(false);
   const [shadow, setShadow] = useState(false);
 
@@ -20,14 +22,14 @@ const Header: React.FC = () => {
 
   return (
     <header className={`header ${shadow ? " shadow-header" : ""}`} id="header">
-      <nav className="flex items-center justify-between">
-        <a href="/" className="flex items-center">
+      <nav className="!flex !items-center !justify-between">
+        <a href="/" className="!flex !items-center">
           <span className="nav__logo_circle">P</span>
-          <span className="nav__logo_name">CodeWithPatrick.</span>
+          <span className="nav__logo_name">{settings.siteTitle || "CodeWithPatrick."}</span>
         </a>
         <div className={`nav__menu${showMenu ? " show-menu" : ""}`} id="nav-menu">
           <span className="nav__title">Menu</span>
-          <h3 className="nav__name">Patrick</h3>
+          <h3 className="nav__name">{settings.siteTitle || "CodeWithPatrick."}</h3>
           <ul className="nav__list">
             <li className="nav__item">
               <a href="#home" className="nav__link active-link" onClick={handleNavLinkClick}>
@@ -52,7 +54,7 @@ const Header: React.FC = () => {
             <li className="nav__item">
               <a
                 href="#contact"
-                className="nav__link nav__link-button"
+                className="nav__link !nav__link-button"
                 onClick={handleNavLinkClick}
               >
                 Contact Me
@@ -63,7 +65,7 @@ const Header: React.FC = () => {
             <IoClose className="nav__close-icon" />
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="!flex !items-center !gap-4">
           {/* Theme toggle will be a separate component */}
             <ThemeToggle />
           {/* Toggle button */}

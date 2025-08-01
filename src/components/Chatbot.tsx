@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { RiRobot3Fill } from "react-icons/ri";
 import { IoIosClose, IoIosSend } from "react-icons/io";
 import axios from "axios";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
 const GITHUB_USERNAME = "Aime-Patrick";
 
@@ -124,6 +125,7 @@ ${readme ? `\nProfile README:\n${readme.substring(0, 500)}...` : ""}
 `;
 
 const Chatbot: React.FC = () => {
+  const { settings } = useSiteSettings();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     { from: "bot", text: "Hi! How can I help you today?" },
@@ -135,6 +137,11 @@ const Chatbot: React.FC = () => {
   const [githubRepos, setGithubRepos] = useState("");
   const [githubReadme, setGithubReadme] = useState("");
   const [githubContributions, setGithubContributions] = useState<any>(null);
+  
+  // If chatbot is disabled in settings, don't render anything
+  if (settings.enableChatbot === false) {
+    return null;
+  }
 
   useEffect(() => {
     if (open && messagesEndRef.current) {
@@ -215,7 +222,7 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+    <div className="!fixed !bottom-6 !right-6 !z-[100] !flex !flex-col !items-end">
       {/* Floating Button */}
       <button
         onClick={() => setOpen((o) => !o)}
@@ -231,8 +238,8 @@ const Chatbot: React.FC = () => {
       >
         {/* Header */}
         <div className="relative !bg-gradient-to-r !from-[var(--black-color-light)] !to-[var(--color-black)] !text-white !px-6 !py-4 rounded-t-2xl flex items-center justify-center border-b border-black/10">
-          <span className="absolute left-4 text-2xl bg-white/10 rounded-full p-1"><RiRobot3Fill /></span>
-          <span className="font-semibold text-lg tracking-wide">AI Chatbot</span>
+          <span className="!absolute !left-4 !text-2xl !bg-white/!10 !rounded-full !p-1"><RiRobot3Fill /></span>
+          <span className="!font-semibold !text-lg !tracking-wide">AI Chatbot</span>
           <button
             onClick={() => setOpen(false)}
             className="absolute right-4 !text-white hover:!text-gray-200 focus:!outline-none text-2xl"
@@ -260,7 +267,7 @@ const Chatbot: React.FC = () => {
             </div>
           ))}
           {loading && (
-            <div className="flex justify-start">
+            <div className="!flex !justify-start">
               <div className="!px-4 !py-2 rounded-2xl bg-gray-200 text-gray-600 text-sm animate-pulse max-w-[75%]">
                 Bot is typing...
               </div>
@@ -304,4 +311,4 @@ const Chatbot: React.FC = () => {
   );
 };
 
-export default Chatbot; 
+export default Chatbot;

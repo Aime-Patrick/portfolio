@@ -38,9 +38,9 @@ const ThemeToggle: React.FC = () => {
       type="button"
     >
       {dark ? (
-        <MdOutlineLightMode size={24} className="change-theme" />
+        <MdOutlineLightMode size={24} className="!change-theme" />
       ) : (
-        <IoIosMoon size={24} className="change-theme" />
+        <IoIosMoon size={24} className="!change-theme" />
       )}
     </button>
   );

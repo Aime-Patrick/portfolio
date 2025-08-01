@@ -20,7 +20,7 @@
     --body-color:hsl(0, 0%, 87%);
     --container-color:hsl(0,0%,83%);
 
-    --body-font:'Playpen Sans', cursive;
+    --body-font:'Playpen Sans';
     --biggest-font-size:1.5rem;
     --h1-font-size:1.75rem;
     --h2-font-size:1.25rem;

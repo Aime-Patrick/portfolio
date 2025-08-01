@@ -20,15 +20,15 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     whileInView={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, type: "spring" }}
     viewport={{ once: true }}
-    className={`shadow-lg border-2 border-[hsla(14,98%,50%,1)]  p-8 min-h-[340px] flex flex-col items-center justify-center text-center transition hover:shadow-2xl ${borderClass ?? ""}`}
+    className={`!shadow-lg !border-2 !border-[hsla(14,98%,50%,1)] !p-8 !min-h-[340px] !flex !flex-col !items-center !justify-center !text-center !transition hover:!shadow-2xl ${borderClass ?? ""}`}
   >
-    <div className="mb-6 flex items-center justify-center w-20 h-20 rounded-full bg-[hsla(14,98%,50%,1)]">
+    <div className="!mb-6 !flex !items-center !justify-center !w-20 !h-20 !rounded-full !bg-[hsla(14,98%,50%,1)]">
       {icon}
     </div>
-    <h2 className="text-xl font-semibold text-gray-900 mb-3">
+    <h2 className="!text-xl !font-semibold !text-gray-900 !mb-3">
       {title}
     </h2>
-    <p className="text-gray-600 ">{description}</p>
+    <p className="!text-gray-600 ">{description}</p>
   </motion.article>
 );
 

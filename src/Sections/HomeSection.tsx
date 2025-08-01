@@ -1,15 +1,59 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { IoLogoInstagram } from "react-icons/io5";
 import { FaLinkedin } from "react-icons/fa";
 import { FaGithub } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
-const HomeSection: React.FC = () => (
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+const HomeSection: React.FC = () => {
+  const [profileData, setProfileData] = useState<any>({
+    name: "Aime Patrick Ndagijimana",
+    title: "Software Engineer",
+    bio: "with knowledge in web development and design, I offer the best projects resulting in quality work.",
+    profileImage: "/_MAL0853.jpg",
+    socialLinks: [
+      { platform: "instagram", url: "https://www.instagram.com/" },
+      { platform: "linkedin", url: "https://www.linkedin.com/in/ndagijimana-patrick-393ba5226" },
+      { platform: "github", url: "https://www.github.com/AimePazzo" }
+    ]
+  });
+  
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const profileDoc = doc(db, 'profile', 'main');
+        const profileSnapshot = await getDoc(profileDoc);
+        
+        if (profileSnapshot.exists()) {
+          const data = profileSnapshot.data();
+          setProfileData({
+            ...profileData,
+            ...data
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      }
+    };
+    
+    fetchProfileData();
+  }, []);
+  
+  // Helper function to get social link URL
+  const getSocialLink = (platform: string) => {
+    const link = profileData.socialLinks?.find((link: any) => 
+      link.platform.toLowerCase() === platform.toLowerCase()
+    );
+    return link?.url || "#";
+  };
+  
+  return (
   <section className="home section" id="home" aria-label="Home section">
-    <div className="home__container container grid">
-      <h1 className="home__name">Aime Patrick Ndagijimana</h1>
+    <div className="home__container !container !grid">
+      <h1 className="home__name">{profileData.name}</h1>
       <div className="home__perfil">
         <div className="home__image">
-          <img src="/_MAL0853.jpg" alt="Aime Patrick Ndagijimana portrait" className="home__img" />
+          <img src={profileData.profileImage || "/_MAL0853.jpg"} alt={`${profileData.name} portrait`} className="home__img" />
           <div className="home__shadow"></div>
           <img
             src="curved-arrow.svg"
@@ -25,7 +69,7 @@ const HomeSection: React.FC = () => (
         </div>
         <div className="home__social">
           <a
-            href="https://www.instagram.com/"
+            href={getSocialLink("instagram")}
             target="_blank"
             rel="noopener noreferrer"
             className="home__social-link"
@@ -34,16 +78,16 @@ const HomeSection: React.FC = () => (
             <IoLogoInstagram />
           </a>
           <a
-            href="https://www.linkedin.com/in/ndagijimana-patrick-393ba5226"
+            href={getSocialLink("linkedin")}
             target="_blank"
             rel="noopener noreferrer"
-            className="home__social-link"
+            className=" home__social-link"
             aria-label="LinkedIn"
           >
             <FaLinkedin />
           </a>
           <a
-            href="https://www.github.com/AimePazzo"
+            href={getSocialLink("github")}
             target="_blank"
             rel="noopener noreferrer"
             className="home__social-link"
@@ -55,8 +99,7 @@ const HomeSection: React.FC = () => (
       </div>
       <div className="home__info">
         <p className="home__description">
-          <b>Software Engineer</b>, with knowledge in web development and
-          design, I offer the best projects resulting in quality work.
+          <b>{profileData.title}</b>, {profileData.bio}
         </p>
         <a href="#about" className="home__scroll" aria-label="Scroll to About section">
           <div className="home__scroll-box">
@@ -68,5 +111,6 @@ const HomeSection: React.FC = () => (
     </div>
   </section>
 );
+};
 
 export default HomeSection;

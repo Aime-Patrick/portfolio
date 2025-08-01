@@ -1,11 +1,14 @@
 import React from "react";
+import { useSiteSettings } from "./SiteSettingsProvider";
 
-const Footer: React.FC = () => (
+const Footer: React.FC = () => {
+  const { settings } = useSiteSettings();
+  
+  return (
   <footer className="footer">
-    <div className="footer__container container grid">
+    <div className="footer__container !container !grid">
       <span className="footer__copy">
-        &#169;All Rights Reserved By{" "}
-        <a href="">Aime Patrick</a>
+        {settings.footerText || "© 2023 Aime Patrick Ndagijimana. All rights reserved."}
       </span>
       <ul className="footer__links">
         <li>
@@ -20,6 +23,7 @@ const Footer: React.FC = () => (
       </ul>
     </div>
   </footer>
-);
+  );
+};
 
 export default Footer;
