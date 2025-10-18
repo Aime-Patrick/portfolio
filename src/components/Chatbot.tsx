@@ -4,139 +4,14 @@ import { IoIosClose, IoIosSend } from "react-icons/io";
 import axios from "axios";
 import { useSiteSettings } from "./SiteSettingsProvider";
 
-const GITHUB_USERNAME = "Aime-Patrick";
-
-const fetchGithubProfile = async () => {
-  const res = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}`);
-  return await res.json();
-};
-
-const fetchGithubRepos = async () => {
-  const res = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?per_page=100`);
-  const repos: any[] = await res.json();
-  return repos
-    .sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-    .slice(0, 5)
-    .map((repo: any) => `- ${repo.name}: ${repo.description || "No description"}`)
-    .join("\n");
-};
-
-const fetchGithubReadme = async () => {
-  try {
-    const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_USERNAME}/main/README.md`);
-    if (res.ok) return await res.text();
-    return "";
-  } catch {
-    return "";
-  }
-};
-
-const fetchGithubContributions = async (token: string) => {
-  const query = `
-    {
-      user(login: "Aime-Patrick") {
-        contributionsCollection {
-          totalCommitContributions
-          totalPullRequestContributions
-          totalIssueContributions
-          totalPullRequestReviewContributions
-          contributionCalendar {
-            totalContributions
-          }
-          commitContributionsByRepository(maxRepositories: 5) {
-            repository {
-              nameWithOwner
-              url
-            }
-            contributions {
-              totalCount
-            }
-          }
-          pullRequestContributionsByRepository(maxRepositories: 5) {
-            repository {
-              nameWithOwner
-              url
-            }
-            contributions {
-              totalCount
-            }
-          }
-        }
-      }
-    }
-  `;
-  const res = await fetch("https://api.github.com/graphql", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query }),
-  });
-  const data = await res.json();
-  return data.data.user.contributionsCollection;
-};
-
-function summarizeExternalContributions(contributions: any) {
-  let summary = "";
-  if (contributions?.commitContributionsByRepository?.length) {
-    summary += "Commits to external repositories:\n";
-    contributions.commitContributionsByRepository.forEach((item: any) => {
-      summary += `- ${item.repository.nameWithOwner}: ${item.contributions.totalCount} commits\n`;
-    });
-  }
-  if (contributions?.pullRequestContributionsByRepository?.length) {
-    summary += "Pull requests to external repositories:\n";
-    contributions.pullRequestContributionsByRepository.forEach((item: any) => {
-      summary += `- ${item.repository.nameWithOwner}: ${item.contributions.totalCount} PRs\n`;
-    });
-  }
-  return summary.trim();
-}
-
-const buildSystemPrompt = (
-  profile: any,
-  repos: string,
-  readme: string,
-  contributions: any
-) => `
-You are a helpful assistant for Aime Patrick Ndagijimana.
-You can only answer questions about Aime Patrick Ndagijimana's skills, projects, performance, GitHub activity, and professional background.
-If you are asked about anything else, or about topics unrelated to Aime Patrick Ndagijimana, you must respond with:
-"I'm sorry, I can only answer questions about Aime Patrick Ndagijimana and his work."
-
-Here is information about Patrick:
-- Name: ${profile.name || "Aime Patrick Ndagijimana"}
-- Bio: ${profile.bio || ""}
-- Location: ${profile.location || ""}
-- Skills: HTML, CSS, JavaScript, React, TypeScript, Node.js, MongoDB, PostgreSQL, MySQL, REST APIs, Figma, Tailwind, Bootstrap, React Native, NestJs, GraphQL
-- Performance: 6+ Years of experience, many happy clients, strong UI/UX, quality work, collaborative projects (e.g., Andela)
-- Latest GitHub Projects:
-${repos}
-- GitHub Contributions (this year):
-  - Total: ${contributions?.contributionCalendar?.totalContributions ?? "N/A"}
-  - Commits: ${contributions?.totalCommitContributions ?? "N/A"}
-  - Pull Requests: ${contributions?.totalPullRequestContributions ?? "N/A"}
-  - Issues: ${contributions?.totalIssueContributions ?? "N/A"}
-  - Reviews: ${contributions?.totalPullRequestReviewContributions ?? "N/A"}
-${summarizeExternalContributions(contributions)}
-${readme ? `\nProfile README:\n${readme.substring(0, 500)}...` : ""}
-\nAlways answer questions about Patrick, his skills, projects, and performance as if you are his personal assistant.
-`;
-
 const Chatbot: React.FC = () => {
   const { settings } = useSiteSettings();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { from: "bot", text: "Hi! How can I help you today?" },
-  ]);
+  const [messages, setMessages] = useState<Array<{ from: string; text: string }>>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [githubProfile, setGithubProfile] = useState<any>(null);
-  const [githubRepos, setGithubRepos] = useState("");
-  const [githubReadme, setGithubReadme] = useState("");
-  const [githubContributions, setGithubContributions] = useState<any>(null);
   
   // If chatbot is disabled in settings, don't render anything
   if (settings.enableChatbot === false) {
@@ -149,76 +24,112 @@ const Chatbot: React.FC = () => {
     }
   }, [messages, open]);
 
-  // Fetch GitHub data on chatbot open
+  // Send initial greeting when chatbot is opened for the first time
   useEffect(() => {
-    if (open && !githubProfile) {
-      (async () => {
+    const fetchInitialGreeting = async () => {
+      if (open && !hasInitialized) {
+        setHasInitialized(true);
+        setLoading(true);
+
         try {
-          const [profile, repos, readme, contributions] = await Promise.all([
-            fetchGithubProfile(),
-            fetchGithubRepos(),
-            fetchGithubReadme(),
-            fetchGithubContributions(import.meta.env.VITE_GITHUB_TOKEN),
-          ]);
-          setGithubProfile(profile);
-          setGithubRepos(repos);
-          setGithubReadme(readme);
-          setGithubContributions(contributions);
-        } catch {
-          setGithubProfile({ name: "Aime Patrick Ndagijimana", bio: "", location: "" });
-          setGithubRepos("");
-          setGithubReadme("");
-          setGithubContributions(null);
+          const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || "";
+          
+          if (!N8N_WEBHOOK_URL) {
+            // Fallback to default greeting if webhook not configured
+            setMessages([{ from: "bot", text: "Hi! How can I help you today?" }]);
+            return;
+          }
+
+          const response = await axios.post(
+            N8N_WEBHOOK_URL,
+            {
+              message: "hello", // Initial greeting trigger
+              chatHistory: [],
+            },
+            {
+              headers: { "Content-Type": "application/json" },
+              timeout: 10000, // 10 second timeout for initial greeting
+            }
+          );
+
+          if (response.data?.success && response.data?.response) {
+            setMessages([{ from: "bot", text: response.data.response }]);
+          } else {
+            setMessages([{ from: "bot", text: "Hi! How can I help you today?" }]);
+          }
+        } catch (err) {
+          console.error("Initial greeting error:", err);
+          // Fallback greeting on error
+          setMessages([{ from: "bot", text: "Hi! How can I help you today?" }]);
+        } finally {
+          setLoading(false);
         }
-      })();
-    }
-  }, [open, githubProfile]);
+      }
+    };
+
+    fetchInitialGreeting();
+  }, [open, hasInitialized]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-    setMessages((prev) => [...prev, { from: "user", text: input }]);
+    
+    const userMessage = input;
+    setMessages((prev) => [...prev, { from: "user", text: userMessage }]);
     setInput("");
     setLoading(true);
 
-    // Build system prompt with latest GitHub data
-    const systemPrompt = buildSystemPrompt(
-      githubProfile || { name: "Aime Patrick Ndagijimana", bio: "", location: "" },
-      githubRepos,
-      githubReadme,
-      githubContributions
-    );
-
     try {
+      const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL || "";
+      
+      if (!N8N_WEBHOOK_URL) {
+        throw new Error("N8N webhook URL not configured");
+      }
+
+      // Wait for the response from N8N webhook
       const response = await axios.post(
-        "https://api.openai.com/v1/chat/completions",
+        N8N_WEBHOOK_URL,
         {
-          model: "gpt-3.5-turbo",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...messages.map((m) => ({
-              role: m.from === "user" ? "user" : "assistant",
-              content: m.text,
-            })),
-            { role: "user", content: input },
-          ],
+          message: userMessage,
+          chatHistory: messages,
         },
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_REACT_OPEN_API}`,
           },
+          timeout: 30000, // 30 second timeout for AI response
         }
       );
-      const aiText = response.data.choices[0].message.content;
-      setMessages((prev) => [...prev, { from: "bot", text: aiText }]);
+
+      // Handle N8N webhook response format: { success, response, timestamp }
+      if (response.data?.success && response.data?.response) {
+        setMessages((prev) => [...prev, { from: "bot", text: response.data.response }]);
+        console.log("Response received at:", response.data.timestamp);
+      } else {
+        throw new Error("Invalid response format from webhook");
+      }
     } catch (err) {
+      console.error("Chatbot error:", err);
+      
+      let errorMessage = "Sorry, I couldn't get a response. Please try again later.";
+      
+      if (axios.isAxiosError(err)) {
+        if (err.code === "ECONNABORTED") {
+          errorMessage = "Request timed out. The AI is taking too long to respond. Please try again.";
+        } else if (err.response) {
+          errorMessage = `Error: ${err.response.status} - ${err.response.statusText}`;
+        } else if (err.request) {
+          errorMessage = "Unable to reach the server. Please check your connection.";
+        }
+      }
+      
       setMessages((prev) => [
         ...prev,
-        { from: "bot", text: "Sorry, I couldn't get a response." },
+        { from: "bot", text: errorMessage },
       ]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

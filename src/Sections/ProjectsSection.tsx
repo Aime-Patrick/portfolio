@@ -72,11 +72,17 @@ const ProjectsSection: React.FC = () => {
 		<h2 className="section__title-1">
 			<span>Projects</span>
 		</h2>
-		<div className="!grid !gap-6 sm:!grid-cols-1 lg:!grid-cols-3 xl:!grid-cols-4 container !place-items-center">
-			{projects.map((project, idx) => (
-				<ProjectCard key={idx} {...project} />
-			))}
-		</div>
+		{loading ? (
+			<div className="container !text-center !py-8">
+				<p>Loading projects...</p>
+			</div>
+		) : (
+			<div className="!grid !gap-6 sm:!grid-cols-1 lg:!grid-cols-3 xl:!grid-cols-4 container !place-items-center">
+				{projects.map((project, idx) => (
+					<ProjectCard key={idx} {...project} />
+				))}
+			</div>
+		)}
 	</section>
   );
 };

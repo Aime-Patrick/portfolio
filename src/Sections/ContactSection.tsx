@@ -13,12 +13,17 @@ const ContactSection: React.FC = () => {
     if (!form.current) return;
 
     try {
+      // Get EmailJS credentials from environment variables
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      
       // Send email via EmailJS
       await emailjs.sendForm(
-        "service_kzutdjf",
-        "template_h8w87eq",
+        serviceId,
+        templateId,
         form.current,
-        "mbdQfTjlWxjvdh2ij"
+        publicKey
       );
       
       // Save message to Firebase

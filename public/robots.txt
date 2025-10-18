@@ -1,0 +1,34 @@
+# robots.txt for Aime Patrick Ndagijimana Portfolio
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://portfolio-three-navy-77.vercel.app/sitemap.xml
+
+# Crawl rate
+Crawl-delay: 0
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Block bad bots
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+

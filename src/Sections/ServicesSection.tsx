@@ -85,11 +85,17 @@ const ServicesSection: React.FC = () => {
       <h2 className="section__title-2">
         <span>Services</span>
       </h2>
-      <div className="services__container container !grid gap-8">
-        {services.map((service, idx) => (
-          <ServiceCard key={idx} {...service} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="container !text-center !py-8">
+          <p>Loading services...</p>
+        </div>
+      ) : (
+        <div className="services__container container !grid gap-8">
+          {services.map((service, idx) => (
+            <ServiceCard key={idx} {...service} />
+          ))}
+        </div>
+      )}
     </section>
   );
 };

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../../firebase';
+import { db } from '../../firebase';
 import { toast } from 'react-hot-toast';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
-const CLOUD_NAME = 'YOUR_CLOUD_NAME'; // TODO: Replace with your actual Cloudinary Cloud Name
-const UPLOAD_PRESET = 'YOUR_UPLOAD_PRESET_NAME'; // TODO: Replace with your actual Cloudinary Upload Preset Name
+// Cloudinary configuration for image uploads
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
 interface Project {
   id: string;
@@ -16,7 +16,7 @@ interface Project {
   description: string;
   links: { url: string; label: string }[];
   imageFile?: File;
-  imagePath?: string;
+  cloudinaryPublicId?: string; // Store Cloudinary public_id for potential future use
 }
 
 const ProjectsManager: React.FC = () => {
@@ -90,18 +90,45 @@ const ProjectsManager: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(currentProject);
+    
+    // Check if Cloudinary is configured
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+      toast.error('Cloudinary is not configured. Please add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to your .env file');
+      return;
+    }
+    
     try {
       const { id, imageFile, image, ...projectData } = currentProject;
       let imageUrl = image;
-      let imagePath = currentProject.imagePath;
+      let cloudinaryPublicId = currentProject.cloudinaryPublicId;
 
       // Handle image upload if there's a new file
       if (imageFile) {
-        const storageRef = ref(storage, `projects/${imageFile.name}`);
-        await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(storageRef);
-        imagePath = `projects/${imageFile.name}`;
+        toast.loading('Uploading image to Cloudinary...');
+        
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('folder', 'portfolio/projects'); // Organize in Cloudinary
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to upload image to Cloudinary');
+        }
+
+        const data = await response.json();
+        imageUrl = data.secure_url; // Get secure HTTPS URL
+        cloudinaryPublicId = data.public_id; // Store for potential future use
+        
+        toast.dismiss();
+        toast.success('Image uploaded successfully!');
       }
 
       if (isEditing) {
@@ -110,7 +137,7 @@ const ProjectsManager: React.FC = () => {
         await updateDoc(projectRef, {
           ...projectData,
           image: imageUrl,
-          imagePath,
+          cloudinaryPublicId,
         });
         toast.success('Project updated successfully');
       } else {
@@ -118,7 +145,7 @@ const ProjectsManager: React.FC = () => {
         await addDoc(collection(db, 'projects'), {
           ...projectData,
           image: imageUrl,
-          imagePath,
+          cloudinaryPublicId,
         });
         toast.success('Project added successfully');
       }
@@ -127,7 +154,8 @@ const ProjectsManager: React.FC = () => {
       fetchProjects();
     } catch (error) {
       console.error('Error saving project:', error);
-      toast.error('Failed to save project');
+      toast.dismiss();
+      toast.error('Failed to save project. Check console for details.');
     }
   };
 
@@ -137,16 +165,15 @@ const ProjectsManager: React.FC = () => {
   };
 
   const handleDelete = async (project: Project) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
+    if (window.confirm('Are you sure you want to delete this project? Note: The image will remain in Cloudinary.')) {
       try {
         // Delete document from Firestore
         await deleteDoc(doc(db, 'projects', project.id));
 
-        // Delete image from Storage if it exists
-        if (project.imagePath) {
-          const imageRef = ref(storage, project.imagePath);
-          await deleteObject(imageRef);
-        }
+        // Note: Cloudinary image deletion requires authenticated API calls
+        // which need a backend server. The image will remain in Cloudinary
+        // but won't be referenced in your portfolio.
+        // You can manually delete unused images from Cloudinary dashboard.
 
         toast.success('Project deleted successfully');
         fetchProjects();
