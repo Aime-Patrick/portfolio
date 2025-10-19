@@ -229,124 +229,124 @@ const ProfileManager: React.FC = () => {
   }
 
   return (
-    <div className="!bg-white !p-6 !rounded-xl !shadow-md">
-      <h3 className="!text-xl !font-bold !mb-6">Manage Profile</h3>
-      <form onSubmit={handleSubmit} className="!flex !flex-col !gap-6">
-        <div className="!grid !grid-cols-1 md:!grid-cols-2 !gap-6">
+    <div className="bg-white p-6 rounded-xl shadow-md">
+      <h3 className="text-xl font-bold mb-6">Manage Profile</h3>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Personal Information */}
-          <div className="!flex !flex-col !gap-4">
-            <h4 className="!text-lg !font-semibold">Personal Information</h4>
+          <div className="flex flex-col gap-4">
+            <h4 className="text-lg font-semibold">Personal Information</h4>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Name</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Name</label>
               <input
                 type="text"
                 name="name"
                 value={profileData.name}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 required
               />
             </div>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Title</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Title</label>
               <input
                 type="text"
                 name="title"
                 value={profileData.title}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 required
                 placeholder="e.g., Full Stack Developer"
               />
             </div>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Bio</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Bio</label>
               <textarea
                 name="bio"
                 value={profileData.bio}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2 !min-h-[100px]"
+                className="border rounded-lg p-2 min-h-[100px]"
                 required
               />
             </div>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Email</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Email</label>
               <input
                 type="email"
                 name="email"
                 value={profileData.email}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 required
               />
             </div>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Phone</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Phone</label>
               <input
                 type="tel"
                 name="phone"
                 value={profileData.phone}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
               />
             </div>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Location</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Location</label>
               <input
                 type="text"
                 name="location"
                 value={profileData.location}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 placeholder="e.g., New York, USA"
               />
             </div>
           </div>
           
           {/* Profile Image & Resume */}
-          <div className="!flex !flex-col !gap-4">
-            <h4 className="!text-lg !font-semibold">Media</h4>
+          <div className="flex flex-col gap-4">
+            <h4 className="text-lg font-semibold">Media</h4>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Profile Image</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Profile Image</label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleProfileImageChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
               />
               {profileData.profileImage && (
-                <div className="!mt-2">
+                <div className="mt-2">
                   <img
                     src={profileData.profileImage}
                     alt="Profile"
-                    className="!w-32 !h-32 !rounded-full !object-cover"
+                    className="w-32 h-32 rounded-full object-cover"
                   />
                 </div>
               )}
             </div>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Resume</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Resume</label>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx"
                 onChange={handleResumeChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
               />
               {profileData.resumeUrl && (
-                <div className="!mt-2">
+                <div className="mt-2">
                   <a
                     href={profileData.resumeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="!text-blue-500 hover:!underline flex items-center gap-2"
+                    className="text-blue-500 hover:underline flex items-center gap-2"
                   >
                     View Current Resume
                   </a>
@@ -355,27 +355,27 @@ const ProfileManager: React.FC = () => {
             </div>
             
             {/* Experience */}
-            <h4 className="!text-lg !font-semibold !mt-4">Experience</h4>
+            <h4 className="text-lg font-semibold mt-4">Experience</h4>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Years of Experience</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Years of Experience</label>
               <input
                 type="text"
                 name="years"
                 value={profileData.experience.years}
                 onChange={handleExperienceChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 placeholder="e.g., 5+"
               />
             </div>
             
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Experience Description</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Experience Description</label>
               <textarea
                 name="description"
                 value={profileData.experience.description}
                 onChange={handleExperienceChange}
-                className="!border !rounded-lg !p-2 !min-h-[100px]"
+                className="border rounded-lg p-2 min-h-[100px]"
                 placeholder="Brief description of your experience"
               />
             </div>
@@ -383,37 +383,37 @@ const ProfileManager: React.FC = () => {
         </div>
         
         {/* Skills */}
-        <div className="!mt-4">
-          <h4 className="!text-lg !font-semibold !mb-4">Skills</h4>
-          <div className="flex flex-wrap gap-2 !mb-4">
+        <div className="mt-4">
+          <h4 className="text-lg font-semibold mb-4">Skills</h4>
+          <div className="flex flex-wrap gap-2 mb-4">
             {profileData.skills.map((skill, index) => (
               <div
                 key={index}
-                className="!bg-gray-100 !px-3 !py-1 !rounded-full flex items-center gap-2"
+                className="bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2"
               >
                 <span>{skill}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveSkill(skill)}
-                  className="!text-red-500 !text-sm"
+                  className="text-red-500 text-sm"
                 >
                   ×
                 </button>
               </div>
             ))}
           </div>
-          <div className="!flex !gap-2">
+          <div className="flex gap-2">
             <input
               type="text"
               value={newSkill}
               onChange={(e) => setNewSkill(e.target.value)}
-              className="!border !rounded-lg !p-2 flex-1"
+              className="border rounded-lg p-2 flex-1"
               placeholder="Add a skill"
             />
             <button
               type="button"
               onClick={handleAddSkill}
-              className="!bg-[var(--color-black)] !text-white !px-4 !py-2 !rounded-lg hover:!bg-[var(--first-color)] transition"
+              className="bg-[var(--color-black)] text-white px-4 py-2 rounded-lg hover:bg-[var(--first-color)] transition"
             >
               Add
             </button>
@@ -421,60 +421,60 @@ const ProfileManager: React.FC = () => {
         </div>
         
         {/* Education */}
-        <div className="!mt-4">
-          <div className="flex items-center justify-between !mb-4">
-            <h4 className="!text-lg !font-semibold">Education</h4>
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-semibold">Education</h4>
             <button
               type="button"
               onClick={addEducation}
-              className="!bg-[var(--color-black)] !text-white !px-4 !py-2 !rounded-lg hover:!bg-[var(--first-color)] transition"
+              className="bg-[var(--color-black)] text-white px-4 py-2 rounded-lg hover:bg-[var(--first-color)] transition"
             >
               Add Education
             </button>
           </div>
           
           {profileData.education.map((edu, index) => (
-            <div key={index} className="!border !p-4 !rounded-lg !mb-4">
-              <div className="flex justify-between items-center !mb-2">
-                <h5 className="!font-medium">Education #{index + 1}</h5>
+            <div key={index} className="border p-4 rounded-lg mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <h5 className="font-medium">Education #{index + 1}</h5>
                 <button
                   type="button"
                   onClick={() => removeEducation(index)}
-                  className="!text-red-500"
+                  className="text-red-500"
                 >
                   Remove
                 </button>
               </div>
-              <div className="!grid !grid-cols-1 md:!grid-cols-3 !gap-4">
-                <div className="!flex !flex-col !gap-2">
-                  <label className="!text-sm">Degree</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm">Degree</label>
                   <input
                     type="text"
                     value={edu.degree}
                     onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
-                    className="!border !rounded-lg !p-2"
+                    className="border rounded-lg p-2"
                     placeholder="e.g., Bachelor of Science"
                     required
                   />
                 </div>
-                <div className="!flex !flex-col !gap-2">
-                  <label className="!text-sm">Institution</label>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm">Institution</label>
                   <input
                     type="text"
                     value={edu.institution}
                     onChange={(e) => handleEducationChange(index, 'institution', e.target.value)}
-                    className="!border !rounded-lg !p-2"
+                    className="border rounded-lg p-2"
                     placeholder="e.g., University of Example"
                     required
                   />
                 </div>
-                <div className="!flex !flex-col !gap-2">
-                  <label className="!text-sm">Year</label>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm">Year</label>
                   <input
                     type="text"
                     value={edu.year}
                     onChange={(e) => handleEducationChange(index, 'year', e.target.value)}
-                    className="!border !rounded-lg !p-2"
+                    className="border rounded-lg p-2"
                     placeholder="e.g., 2020"
                     required
                   />
@@ -485,49 +485,49 @@ const ProfileManager: React.FC = () => {
         </div>
         
         {/* Social Links */}
-        <div className="!mt-4">
-          <div className="flex items-center justify-between !mb-4">
-            <h4 className="!text-lg !font-semibold">Social Links</h4>
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-semibold">Social Links</h4>
             <button
               type="button"
               onClick={addSocialLink}
-              className="!bg-[var(--color-black)] !text-white !px-4 !py-2 !rounded-lg hover:!bg-[var(--first-color)] transition"
+              className="bg-[var(--color-black)] text-white px-4 py-2 rounded-lg hover:bg-[var(--first-color)] transition"
             >
               Add Link
             </button>
           </div>
           
           {profileData.socialLinks.map((link, index) => (
-            <div key={index} className="!border !p-4 !rounded-lg !mb-4">
-              <div className="flex justify-between items-center !mb-2">
-                <h5 className="!font-medium">Social Link #{index + 1}</h5>
+            <div key={index} className="border p-4 rounded-lg mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <h5 className="font-medium">Social Link #{index + 1}</h5>
                 <button
                   type="button"
                   onClick={() => removeSocialLink(index)}
-                  className="!text-red-500"
+                  className="text-red-500"
                 >
                   Remove
                 </button>
               </div>
-              <div className="!grid !grid-cols-1 md:!grid-cols-2 !gap-4">
-                <div className="!flex !flex-col !gap-2">
-                  <label className="!text-sm">Platform</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm">Platform</label>
                   <input
                     type="text"
                     value={link.platform}
                     onChange={(e) => handleSocialLinkChange(index, 'platform', e.target.value)}
-                    className="!border !rounded-lg !p-2"
+                    className="border rounded-lg p-2"
                     placeholder="e.g., github, linkedin, twitter"
                     required
                   />
                 </div>
-                <div className="!flex !flex-col !gap-2">
-                  <label className="!text-sm">URL</label>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm">URL</label>
                   <input
                     type="url"
                     value={link.url}
                     onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)}
-                    className="!border !rounded-lg !p-2"
+                    className="border rounded-lg p-2"
                     placeholder="https://..."
                     required
                   />
@@ -540,7 +540,7 @@ const ProfileManager: React.FC = () => {
         <button
           type="submit"
           disabled={saving}
-          className="!bg-[var(--color-black)] !text-white !px-6 !py-3 !rounded-lg hover:!bg-[var(--first-color)] transition disabled:!opacity-50 !mt-6"
+          className="bg-[var(--color-black)] text-white px-6 py-3 rounded-lg hover:bg-[var(--first-color)] transition disabled:opacity-50 mt-6"
         >
           {saving ? 'Saving...' : 'Save Profile'}
         </button>

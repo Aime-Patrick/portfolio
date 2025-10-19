@@ -185,89 +185,89 @@ const ProjectsManager: React.FC = () => {
   };
 
   return (
-    <div className="!flex !flex-col !gap-8">
-      <div className="!bg-white !p-6 !rounded-xl !shadow-md">
-        <h3 className="!text-xl !font-bold !mb-4">
+    <div className="flex flex-col gap-8">
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <h3 className="text-xl font-bold mb-4">
           {isEditing ? 'Edit Project' : 'Add New Project'}
         </h3>
-        <form onSubmit={handleSubmit} className="!flex !flex-col !gap-4">
-          <div className="!grid !grid-cols-1 md:!grid-cols-2 !gap-4">
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Title</label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Title</label>
               <input
                 type="text"
                 name="title"
                 value={currentProject.title}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 required
               />
             </div>
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Subtitle</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Subtitle</label>
               <input
                 type="text"
                 name="subtitle"
                 value={currentProject.subtitle}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 required
               />
             </div>
           </div>
 
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Description</label>
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Description</label>
             <textarea
               name="description"
               value={currentProject.description}
               onChange={handleInputChange}
-              className="!border !rounded-lg !p-2 !min-h-[100px]"
+              className="border rounded-lg p-2 min-h-[100px]"
               required
             />
           </div>
 
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Project Image</label>
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Project Image</label>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="!border !rounded-lg !p-2"
+              className="border rounded-lg p-2"
               {...(!isEditing && { required: true })}
             />
             {currentProject.image && (
-              <div className="!mt-2">
+              <div className="mt-2">
                 <img
                   src={currentProject.image}
                   alt="Project preview"
-                  className="!w-40 !h-auto !rounded-md"
+                  className="w-40 h-auto rounded-md"
                 />
               </div>
             )}
           </div>
 
-          <div className="!flex !flex-col !gap-4">
-            <label className="!font-medium">Links</label>
+          <div className="flex flex-col gap-4">
+            <label className="font-medium">Links</label>
             {currentProject.links.map((link, index) => (
-              <div key={index} className="!grid !grid-cols-1 md:!grid-cols-2 !gap-4">
-                <div className="!flex !flex-col !gap-2">
-                  <label className="!text-sm">Label</label>
+              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm">Label</label>
                   <input
                     type="text"
                     value={link.label}
                     onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
-                    className="!border !rounded-lg !p-2"
+                    className="border rounded-lg p-2"
                     required
                   />
                 </div>
-                <div className="!flex !flex-col !gap-2">
-                  <label className="!text-sm">URL</label>
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm">URL</label>
                   <input
                     type="url"
                     value={link.url}
                     onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                    className="!border !rounded-lg !p-2"
+                    className="border rounded-lg p-2"
                     required
                   />
                 </div>
@@ -275,10 +275,10 @@ const ProjectsManager: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex gap-4 !mt-4">
+          <div className="flex gap-4 mt-4">
             <button
               type="submit"
-              className="!bg-[var(--color-black)] !text-white !px-6 !py-2 !rounded-lg hover:!bg-[var(--first-color)] transition"
+              className="bg-[var(--color-black)] text-white px-6 py-2 rounded-lg hover:bg-[var(--first-color)] transition"
             >
               {isEditing ? 'Update Project' : 'Add Project'}
             </button>
@@ -286,7 +286,7 @@ const ProjectsManager: React.FC = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="!bg-gray-300 !text-gray-800 !px-6 !py-2 !rounded-lg hover:!bg-gray-400 transition"
+                className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
               >
                 Cancel
               </button>
@@ -295,38 +295,38 @@ const ProjectsManager: React.FC = () => {
         </form>
       </div>
 
-      <div className="!bg-white !p-6 !rounded-xl !shadow-md">
-        <h3 className="!text-xl !font-bold !mb-4">Manage Projects</h3>
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <h3 className="text-xl font-bold mb-4">Manage Projects</h3>
         {loading ? (
           <p>Loading projects...</p>
         ) : projects.length === 0 ? (
           <p>No projects found. Add your first project above.</p>
         ) : (
-          <div className="!grid !grid-cols-1 md:!grid-cols-2 lg:!grid-cols-3 !gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <div key={project.id} className="!border !rounded-lg !overflow-hidden !shadow-sm">
-                <div className="!h-40 !overflow-hidden">
+              <div key={project.id} className="border rounded-lg overflow-hidden shadow-sm">
+                <div className="h-40 overflow-hidden">
                   <img
                     src={project.image}
                     alt={project.title}
-                    className="!w-full !h-full !object-cover"
+                    className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="!p-4">
-                  <h4 className="!font-bold !text-lg">{project.title}</h4>
-                  <p className="!text-sm !text-gray-500">{project.subtitle}</p>
-                  <p className="!text-sm !mt-2 !line-clamp-2">{project.description}</p>
-                  <div className="flex gap-2 !mt-4">
+                <div className="p-4">
+                  <h4 className="font-bold text-lg">{project.title}</h4>
+                  <p className="text-sm text-gray-500">{project.subtitle}</p>
+                  <p className="text-sm mt-2 line-clamp-2">{project.description}</p>
+                  <div className="flex gap-2 mt-4">
                     <button
                       onClick={() => handleEdit(project)}
-                      className="!bg-blue-500 !text-white !p-2 !rounded-lg hover:!bg-blue-600 transition"
+                      className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
                       aria-label="Edit project"
                     >
                       <FaEdit />
                     </button>
                     <button
                       onClick={() => handleDelete(project)}
-                      className="!bg-red-500 !text-white !p-2 !rounded-lg hover:!bg-red-600 transition"
+                      className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition"
                       aria-label="Delete project"
                     >
                       <FaTrash />

@@ -1,0 +1,27 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: 'class',
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      animation: {
+        'border-spin': 'border-spin 3s linear infinite',
+      },
+      keyframes: {
+        'border-spin': {
+          to: {
+            '--border-angle': '1turn',
+          },
+        },
+      },
+    },
+  },
+  plugins: [],
+  important: true,
+};
+
+
+

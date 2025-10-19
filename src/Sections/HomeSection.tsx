@@ -5,6 +5,7 @@ import { FaGithub } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { TypeAnimation } from 'react-type-animation';
 const HomeSection: React.FC = () => {
   const [profileData, setProfileData] = useState<any>({
     name: "Aime Patrick Ndagijimana",
@@ -49,21 +50,63 @@ const HomeSection: React.FC = () => {
   
   return (
   <section className="home section" id="home" aria-label="Home section">
-    <div className="home__container !container !grid">
-      <h1 className="home__name">{profileData.name}</h1>
-      <div className="home__perfil">
+    <div className="home__container container flex flex-col md:flex-row gap-8 max-w-7xl items-center">
+      <div className="flex-1 w-full md:w-auto">
+      <h1 className="home__name w-full">
+        <TypeAnimation
+          sequence={[
+            'I am Aime Patrick Ndagijimana',
+            3000,
+            'Full Stack & AI Solutions Engineer',
+            3000,
+            'Software Engineer',
+            3000,
+            'AI Agent Developer',
+            3000,
+            'AI Engineer',
+            3000,
+          ]}
+          wrapper="span"
+          speed={50}
+          style={{ 
+            display: 'inline-block',
+            background: 'linear-gradient(90deg, var(--first-color), #ff6b35, var(--first-color))',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontWeight: 'bold',
+            minHeight: '4.5rem'
+          }}
+          repeat={Infinity}
+          cursor={true}
+          className="typing-text"
+        />
+      </h1>
+      <div className="home__info">
+        <p className="home__description mr-10">
+          <b>{profileData.title}</b>, {profileData.bio}
+        </p>
+        <a href="#about" className="home__scroll" aria-label="Scroll to About section">
+          <div className="home__scroll-box">
+            <IoIosArrowDown className="home__scroll-icon" />
+          </div>
+          <span className="home__scroll-text">Scroll Down</span>
+        </a>
+      </div>
+      </div>
+      <div className="home__perfil flex-shrink-0">
         <div className="home__image">
           <img src={profileData.profileImage || "/_MAL0853.jpg"} alt={`${profileData.name} portrait`} className="home__img" />
           <div className="home__shadow"></div>
           <img
             src="curved-arrow.svg"
             alt="Curved arrow graphic"
-            className="home__arrow"
+            className="home__arrow dark:invert"
           />
           <img
             src="random-lines.svg"
             alt="Decorative random lines"
-            className="home__line"
+            className="home__line dark:invert"
           />
           <div className="geomatric-box"></div>
         </div>
@@ -96,17 +139,6 @@ const HomeSection: React.FC = () => {
             <FaGithub />
           </a>
         </div>
-      </div>
-      <div className="home__info">
-        <p className="home__description">
-          <b>{profileData.title}</b>, {profileData.bio}
-        </p>
-        <a href="#about" className="home__scroll" aria-label="Scroll to About section">
-          <div className="home__scroll-box">
-            <IoIosArrowDown className="home__scroll-icon" />
-          </div>
-          <span className="home__scroll-text">Scroll Down</span>
-        </a>
       </div>
     </div>
   </section>

@@ -8,6 +8,8 @@ import ServicesManager from "./admin/ServicesManager";
 import ProfileManager from "./admin/ProfileManager";
 import MessagesManager from "./admin/MessagesManager";
 import SiteSettingsManager from "./admin/SiteSettingsManager";
+import CertificatesManager from "./admin/CertificatesManager";
+import AboutManager from "./admin/AboutManager";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
@@ -25,7 +27,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const section = params.get("section");
-    if (section && ["dashboard", "projects", "services", "profile", "messages", "settings"].includes(section)) {
+    if (section && ["dashboard", "projects", "services", "certificates", "about", "profile", "messages", "settings"].includes(section)) {
       setActive(section);
     }
   }, [location]);
@@ -45,6 +47,8 @@ const AdminDashboard: React.FC = () => {
     dashboard: "Dashboard",
     projects: "Projects",
     services: "Services",
+    certificates: "Certificates",
+    about: "About Me",
     profile: "Profile",
     messages: "Messages",
     settings: "Site Settings",
@@ -57,6 +61,10 @@ const AdminDashboard: React.FC = () => {
         return <ProjectsManager />;
       case "services":
         return <ServicesManager />;
+      case "certificates":
+        return <CertificatesManager />;
+      case "about":
+        return <AboutManager />;
       case "profile":
         return <ProfileManager />;
       case "messages":
@@ -70,7 +78,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="!min-h-screen !bg-[var(--body-color)]">
+    <div className="min-h-screen bg-[var(--body-color)]">
       <Toaster position="top-right" />
       <AdminLayout
         sidebarOpen={sidebarOpen}

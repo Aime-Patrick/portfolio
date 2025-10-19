@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Theme Cache</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            background: #f44a00;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #e03900;
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Theme Debugger</h1>
+    
+    <div class="info">
+        <h3>Current Status:</h3>
+        <p id="status"></p>
+    </div>
+    
+    <button onclick="clearTheme()">Clear Theme Cache</button>
+    <button onclick="setLight()">Force Light Mode</button>
+    <button onclick="setDark()">Force Dark Mode</button>
+    
+    <p style="margin-top: 30px;">
+        After clicking, refresh your portfolio site.
+    </p>
+
+    <script>
+        function updateStatus() {
+            const theme = localStorage.getItem('selected-theme');
+            document.getElementById('status').innerHTML = 
+                `<strong>localStorage:</strong> ${theme || 'null (defaults to dark)'}`;
+        }
+
+        function clearTheme() {
+            localStorage.removeItem('selected-theme');
+            alert('✅ Theme cache cleared! Refresh your portfolio.');
+            updateStatus();
+        }
+
+        function setLight() {
+            localStorage.setItem('selected-theme', 'light');
+            alert('✅ Set to light mode! Refresh your portfolio.');
+            updateStatus();
+        }
+
+        function setDark() {
+            localStorage.setItem('selected-theme', 'dark');
+            alert('✅ Set to dark mode! Refresh your portfolio.');
+            updateStatus();
+        }
+
+        // Initialize
+        updateStatus();
+    </script>
+</body>
+</html>

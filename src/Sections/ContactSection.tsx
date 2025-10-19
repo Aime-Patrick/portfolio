@@ -49,7 +49,7 @@ const ContactSection: React.FC = () => {
 
   return (
     <section className="contact section" id="contact" aria-label="Contact section">
-      <div className="contact__container !grid">
+      <div className="contact__container grid">
         <div className="contact__data">
           <h2 className="section__title-2">
             <span>Contact Me</span>
@@ -62,7 +62,7 @@ const ContactSection: React.FC = () => {
           </p>
           <div className="geomatric-box"></div>
         </div>
-        <div className="contact__mail">
+        <div className="contact__mail bg-[#1f1f1f]">
           <h2 className="contact__title">Send Me A Message</h2>
           <form className="contact__form" id="contact-form" ref={form} onSubmit={sendEmail} aria-label="Contact form">
             <div className="contact__group">
@@ -118,7 +118,7 @@ const ContactSection: React.FC = () => {
                 Message
               </label>
             </div>
-            <button className="contact__button button" type="submit">
+            <button className="button" type="submit">
               < RiSendPlaneFill className="svg"/> Send Message
             </button>
           </form>
@@ -135,7 +135,7 @@ const ContactSection: React.FC = () => {
                 Write me on my social networks
               </p>
             </div>
-            <div className="!flex !gap-4 !items-center !justify-center" aria-label="Social links">
+            <div className="flex gap-4 items-center justify-center" aria-label="Social links">
                 <SocialLinks variant="contact" />
             </div>
           </div>

@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { RiRobot3Fill } from "react-icons/ri";
 import { IoIosClose, IoIosSend } from "react-icons/io";
+import { FiMaximize2, FiMinimize2, FiMonitor } from "react-icons/fi";
 import axios from "axios";
 import { useSiteSettings } from "./SiteSettingsProvider";
+
+type ChatSize = "normal" | "maximized" | "fullscreen";
 
 const Chatbot: React.FC = () => {
   const { settings } = useSiteSettings();
   const [open, setOpen] = useState(false);
+  const [chatSize, setChatSize] = useState<ChatSize>("normal");
   const [messages, setMessages] = useState<Array<{ from: string; text: string }>>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -133,75 +137,177 @@ const Chatbot: React.FC = () => {
   };
 
   return (
-    <div className="!fixed !bottom-6 !right-6 !z-[100] !flex !flex-col !items-end">
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] flex flex-col items-end">
       {/* Floating Button */}
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`transition-transform duration-300 ease-in-out bg-gradient-to-br from-[var(--black-color-light)] to-[var(--color-black)] shadow-xl rounded-full w-16 h-16 flex items-center justify-center text-white text-3xl hover:scale-110 focus:outline-none animate-bounce ${open ? "rotate-12" : ""}`}
-        aria-label="Open chatbot"
+        className={`relative group transition-all duration-500 ease-out bg-gradient-to-br from-[var(--first-color)] to-orange-600 shadow-2xl shadow-orange-500/40 rounded-full w-14 h-14 md:w-16 md:h-16 flex items-center justify-center text-white text-2xl md:text-3xl hover:scale-110 hover:shadow-orange-500/60 focus:outline-none focus:ring-4 focus:ring-orange-500/30 ${
+          open ? "rotate-180 scale-95" : "animate-bounce"
+        }`}
+        aria-label={open ? "Close chatbot" : "Open chatbot"}
       >
-        <span><RiRobot3Fill /></span>
+        {/* Pulse Effect */}
+        <span className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--first-color)] to-orange-600 animate-ping opacity-75"></span>
+        
+        {/* Icon */}
+        <span className="relative z-10 transition-transform duration-300 group-hover:scale-110">
+          {open ? <IoIosClose className="text-4xl" /> : <RiRobot3Fill />}
+        </span>
+        
+        {/* Notification Badge */}
+        {!open && (
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse shadow-lg"></span>
+        )}
       </button>
       {/* Chat Window */}
       <div
-        className={`mt-4 !w-[350px] !max-w-[95vw] !bg-white !rounded-3xl !shadow-2xl !border !border-gray-200 transition-all duration-500 ease-in-out flex flex-col ${open ? "!opacity-100 !translate-y-0 !scale-100" : "!opacity-0 !pointer-events-none !translate-y-4 !scale-95"}`}
-        style={{ minHeight: open ? "480px" : 0, maxHeight: open ? "80vh" : 0 }}
+        className={`backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 rounded-3xl shadow-2xl shadow-black/10 border border-gray-200/50 dark:border-gray-700/50 transition-all duration-500 ease-out flex flex-col overflow-hidden ${
+          open ? "opacity-100 translate-y-0 scale-100" : "opacity-0 pointer-events-none translate-y-8 scale-90"
+        } ${
+          chatSize === "fullscreen"
+            ? "fixed inset-4 w-auto max-w-none z-[100]"
+            : chatSize === "maximized"
+            ? "fixed bottom-24 right-4 w-[600px] max-w-[90vw] z-50"
+            : "mt-4 w-[360px] max-w-[95vw]"
+        }`}
+        style={{ 
+          minHeight: open ? (chatSize === "fullscreen" ? "auto" : "500px") : 0, 
+          maxHeight: open ? (chatSize === "fullscreen" ? "auto" : "85vh") : 0,
+        }}
       >
         {/* Header */}
-        <div className="relative !bg-gradient-to-r !from-[var(--black-color-light)] !to-[var(--color-black)] !text-white !px-6 !py-4 rounded-t-2xl flex items-center justify-center border-b border-black/10">
-          <span className="!absolute !left-4 !text-2xl !bg-white/!10 !rounded-full !p-1"><RiRobot3Fill /></span>
-          <span className="!font-semibold !text-lg !tracking-wide">AI Chatbot</span>
-          <button
-            onClick={() => setOpen(false)}
-            className="absolute right-4 !text-white hover:!text-gray-200 focus:!outline-none text-2xl"
-            aria-label="Close chatbot"
-          >
-            <IoIosClose />
-          </button>
+        <div className="relative bg-gradient-to-br from-[var(--first-color)] to-orange-600 text-white px-6 py-5 rounded-t-3xl flex items-center justify-between shadow-lg">
+          {/* Bot Avatar & Title */}
+          <div className="flex items-center gap-3 flex-1">
+            <div className="relative">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
+                <RiRobot3Fill className="text-xl" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></span>
+            </div>
+            <div>
+              <h3 className="font-bold text-sm tracking-wide">AI Assistant</h3>
+              <p className="text-xs text-white/80">Online • Ready to help</p>
+            </div>
+          </div>
+
+          {/* Size & Close Controls */}
+          <div className="flex items-center gap-2">
+            {/* Maximize/Minimize Buttons */}
+            <button
+              onClick={() => {
+                if (chatSize === "normal") setChatSize("maximized");
+                else if (chatSize === "maximized") setChatSize("fullscreen");
+                else setChatSize("normal");
+              }}
+              className="p-2 rounded-full hover:bg-white/20 transition-colors backdrop-blur-sm"
+              aria-label={chatSize === "fullscreen" ? "Minimize chat" : "Maximize chat"}
+              title={chatSize === "fullscreen" ? "Minimize" : chatSize === "maximized" ? "Fullscreen" : "Maximize"}
+            >
+              {chatSize === "fullscreen" ? (
+                <FiMinimize2 className="text-lg" />
+              ) : chatSize === "maximized" ? (
+                <FiMonitor className="text-lg" />
+              ) : (
+                <FiMaximize2 className="text-lg" />
+              )}
+            </button>
+
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setOpen(false);
+                setChatSize("normal"); // Reset to normal size when closed
+              }}
+              className="p-2 rounded-full hover:bg-white/20 transition-colors backdrop-blur-sm"
+              aria-label="Close chatbot"
+            >
+              <IoIosClose className="text-2xl" />
+            </button>
+          </div>
         </div>
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto !px-4 !py-4 space-y-3 !bg-gray-50 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent" style={{ minHeight: "200px" }}>
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`!px-4 !py-2 !rounded-2xl text-sm !shadow max-w-[75%] transition-all duration-300 break-words ${
-                  msg.from === "user"
-                    ? "!bg-black !text-white rounded-br-md animate-slide-in-right mb-2"
-                    : "!bg-white !text-gray-800 !border !border-gray-200 rounded-bl-md animate-slide-in-left"
-                }`}
-              >
-                {msg.text}
+        <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4 bg-gradient-to-b from-gray-50/50 to-white/50 dark:from-gray-800/30 dark:to-gray-900/30 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ minHeight: "280px" }}>
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-[var(--first-color)]/10 to-orange-600/10 rounded-full flex items-center justify-center mb-4">
+                <RiRobot3Fill className="text-3xl text-[var(--first-color)]" />
               </div>
+              <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">Welcome! Ask me anything</p>
+              <p className="text-gray-400 text-xs mt-2">I'm here to help you</p>
             </div>
-          ))}
+          ) : (
+            messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex items-end gap-2 ${msg.from === "user" ? "flex-row-reverse" : "flex-row"}`}
+              >
+                {/* Avatar */}
+                {msg.from === "bot" && (
+                  <div className="w-7 h-7 bg-gradient-to-br from-[var(--first-color)] to-orange-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                    <RiRobot3Fill className="text-white text-sm" />
+                  </div>
+                )}
+                
+                {/* Message Bubble */}
+                <div
+                  className={`relative px-4 py-2.5 rounded-2xl text-sm max-w-[80%] break-words shadow-sm transition-all duration-300 ${
+                    msg.from === "user"
+                      ? "bg-gradient-to-br from-[var(--first-color)] to-orange-600 text-white rounded-br-md shadow-orange-500/20"
+                      : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-bl-md"
+                  } animate-slide-in-${msg.from === "user" ? "right" : "left"}`}
+                >
+                  <p className="leading-relaxed">{msg.text}</p>
+                  
+                  {/* Time (optional) */}
+                  <span className={`block text-[10px] mt-1 ${
+                    msg.from === "user" ? "text-white/70" : "text-gray-400"
+                  }`}>
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+          
+          {/* Loading Indicator */}
           {loading && (
-            <div className="!flex !justify-start">
-              <div className="!px-4 !py-2 rounded-2xl bg-gray-200 text-gray-600 text-sm animate-pulse max-w-[75%]">
-                Bot is typing...
+            <div className="flex items-end gap-2">
+              <div className="w-7 h-7 bg-gradient-to-br from-[var(--first-color)] to-orange-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                <RiRobot3Fill className="text-white text-sm" />
+              </div>
+              <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="flex gap-1.5">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </div>
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
         {/* Input */}
-        <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-gray-200 !bg-white !px-4 !py-3 rounded-b-3xl !shadow-md">
+        <form onSubmit={handleSend} className="flex items-center gap-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-4 rounded-b-3xl shadow-lg">
           <input
             type="text"
-            className="flex-1 !px-4 !py-2 !rounded-full !border !border-gray-200 focus:!outline-none focus:!ring-2 focus:!ring-gray-700 transition text-sm !bg-gray-50"
+            className="flex-1 px-5 py-3 rounded-full border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[var(--first-color)] focus:border-transparent transition-all duration-300 text-sm bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
             placeholder="Type your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            disabled={!open}
+            disabled={!open || loading}
           />
           <button
             type="submit"
-            className="!bg-black hover:!bg-[var(--black-color-light)] !text-white !px-5 !py-2 !rounded-full transition disabled:!opacity-50 !shadow"
-            disabled={!input.trim()}
+            className={`p-3 rounded-full transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+              input.trim()
+                ? "bg-gradient-to-br from-[var(--first-color)] to-orange-600 text-white hover:shadow-orange-500/40 hover:scale-105"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+            }`}
+            disabled={!input.trim() || loading}
+            aria-label="Send message"
           >
-            <IoIosSend />
+            <IoIosSend className="text-xl" />
           </button>
         </form>
         {/* Animations for message bubbles */}

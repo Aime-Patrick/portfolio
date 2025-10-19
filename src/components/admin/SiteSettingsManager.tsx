@@ -71,128 +71,128 @@ const SiteSettingsManager: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="!flex !justify-center !items-center !h-64">
-        <div className="!animate-spin !rounded-full !h-12 !w-12 !border-t-2 !border-b-2 !border-[var(--first-color)]"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--first-color)]"></div>
       </div>
     );
   }
 
   return (
-    <div className="!bg-white !rounded-lg !shadow-md !p-6">
-      <h2 className="!text-2xl !font-bold !mb-6">Site Settings</h2>
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-2xl font-bold mb-6">Site Settings</h2>
       
-      <form onSubmit={handleSubmit} className="!space-y-6">
-        <div className="!grid !grid-cols-1 md:!grid-cols-2 !gap-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Site Title */}
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Site Title</label>
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Site Title</label>
             <input
               type="text"
               name="siteTitle"
               value={settings.siteTitle}
               onChange={handleInputChange}
-              className="!border !border-gray-300 !rounded-md !p-2"
+              className="border border-gray-300 rounded-md p-2"
               required
             />
           </div>
           
           {/* Site Description */}
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Site Description</label>
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Site Description</label>
             <input
               type="text"
               name="siteDescription"
               value={settings.siteDescription}
               onChange={handleInputChange}
-              className="!border !border-gray-300 !rounded-md !p-2"
+              className="border border-gray-300 rounded-md p-2"
               required
             />
           </div>
           
           {/* Site Keywords */}
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Site Keywords</label>
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Site Keywords</label>
             <input
               type="text"
               name="siteKeywords"
               value={settings.siteKeywords}
               onChange={handleInputChange}
-              className="!border !border-gray-300 !rounded-md !p-2"
+              className="border border-gray-300 rounded-md p-2"
               placeholder="Comma separated keywords"
             />
           </div>
           
           {/* Footer Text */}
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Footer Text</label>
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Footer Text</label>
             <input
               type="text"
               name="footerText"
               value={settings.footerText}
               onChange={handleInputChange}
-              className="!border !border-gray-300 !rounded-md !p-2"
+              className="border border-gray-300 rounded-md p-2"
             />
           </div>
           
           {/* Primary Color */}
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Primary Color</label>
-            <div className="!flex !items-center !gap-2">
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Primary Color</label>
+            <div className="flex items-center gap-2">
               <input
                 type="color"
                 name="primaryColor"
                 value={settings.primaryColor}
                 onChange={handleInputChange}
-                className="!w-10 !h-10 !border-0"
+                className="w-10 h-10 border-0"
               />
               <input
                 type="text"
                 name="primaryColor"
                 value={settings.primaryColor}
                 onChange={handleInputChange}
-                className="!border !border-gray-300 !rounded-md !p-2 !flex-1"
+                className="border border-gray-300 rounded-md p-2 flex-1"
               />
             </div>
           </div>
           
           {/* Secondary Color */}
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Secondary Color</label>
-            <div className="!flex !items-center !gap-2">
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Secondary Color</label>
+            <div className="flex items-center gap-2">
               <input
                 type="color"
                 name="secondaryColor"
                 value={settings.secondaryColor}
                 onChange={handleInputChange}
-                className="!w-10 !h-10 !border-0"
+                className="w-10 h-10 border-0"
               />
               <input
                 type="text"
                 name="secondaryColor"
                 value={settings.secondaryColor}
                 onChange={handleInputChange}
-                className="!border !border-gray-300 !rounded-md !p-2 !flex-1"
+                className="border border-gray-300 rounded-md p-2 flex-1"
               />
             </div>
           </div>
         </div>
         
         {/* Enable Chatbot */}
-        <div className="!flex !items-center !gap-2">
+        <div className="flex items-center gap-2">
           <input
             type="checkbox"
             name="enableChatbot"
             id="enableChatbot"
             checked={settings.enableChatbot}
             onChange={handleInputChange}
-            className="!w-4 !h-4"
+            className="w-4 h-4"
           />
-          <label htmlFor="enableChatbot" className="!font-medium">Enable Chatbot</label>
+          <label htmlFor="enableChatbot" className="font-medium">Enable Chatbot</label>
         </div>
         
         <button
           type="submit"
-          className="!flex !items-center !justify-center !gap-2 !bg-[var(--first-color)] !text-white !py-2 !px-4 !rounded-md hover:!bg-[var(--first-color-alt)] !transition-colors"
+          className="flex items-center justify-center gap-2 bg-[var(--first-color)] text-white py-2 px-4 rounded-md hover:bg-[var(--first-color-alt)] transition-colors"
         >
           <FaSave />
           Save Settings

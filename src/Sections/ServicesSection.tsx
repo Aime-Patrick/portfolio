@@ -8,20 +8,20 @@ import { db } from '../firebase';
 // Fallback services data
 const defaultServices = [
   {
-    icon: <FiLayout size={32} className="!text-white" />,
+    icon: <FiLayout size={32} className="text-white" />,
     title: "Web Design",
     description:
       "Beautiful and elegant designs with interfaces that are intuitive, efficient and pleasant to use for the user.",
   },
   {
-    icon: <FaLaptopCode  size={32} className="!text-white"/>,
+    icon: <FaLaptopCode  size={32} className="text-white"/>,
     title: "Development",
     description:
       "Custom web development tailored to your specifications, designed to provide a flawless user experience.",
     borderClass: "second",
   },
   {
-    icon: <GiSmartphone size={32} className="!text-white" />,
+    icon: <GiSmartphone size={32} className="text-white" />,
     title: "Mobile App",
     description:
       "Design and transform website projects into mobile apps to provide a seamless user experience.",
@@ -32,13 +32,13 @@ const defaultServices = [
 const getIconComponent = (iconName: string) => {
   switch(iconName) {
     case 'FiLayout':
-      return <FiLayout size={32} className="!text-white" />;
+      return <FiLayout size={32} className="text-white" />;
     case 'FaLaptopCode':
-      return <FaLaptopCode size={32} className="!text-white" />;
+      return <FaLaptopCode size={32} className="text-white" />;
     case 'GiSmartphone':
-      return <GiSmartphone size={32} className="!text-white" />;
+      return <GiSmartphone size={32} className="text-white" />;
     default:
-      return <FiLayout size={32} className="!text-white" />;
+      return <FiLayout size={32} className="text-white" />;
   }
 };
 
@@ -86,11 +86,11 @@ const ServicesSection: React.FC = () => {
         <span>Services</span>
       </h2>
       {loading ? (
-        <div className="container !text-center !py-8">
+        <div className="container text-center py-8">
           <p>Loading services...</p>
         </div>
       ) : (
-        <div className="services__container container !grid gap-8">
+        <div className="services__container container grid gap-8">
           {services.map((service, idx) => (
             <ServiceCard key={idx} {...service} />
           ))}

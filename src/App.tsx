@@ -6,6 +6,7 @@ import HomeSection from "./Sections/HomeSection";
 import AboutSection from "./Sections/AboutSection";
 import ServicesSection from "./Sections/ServicesSection";
 import ProjectsSection from "./Sections/ProjectsSection";
+import CertificatesSection from "./Sections/CertificatesSection";
 import ContactSection from "./Sections/ContactSection";
 import Chatbot from "./components/Chatbot";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
@@ -39,11 +40,12 @@ const App: React.FC = () => {
             element={
               <>
                 <Header />
-                <main className="!main">
+                <main className="main">
                   <HomeSection />
                   <AboutSection />
                   <ServicesSection />
                   <ProjectsSection />
+                  <CertificatesSection />
                   <ContactSection />
                 </main>
                 <Chatbot />

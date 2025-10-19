@@ -16,9 +16,9 @@ interface Service {
 }
 
 const iconOptions = [
-  { value: 'FiLayout', label: 'Layout', component: <FiLayout size={32} className="!text-white" /> },
-  { value: 'FaLaptopCode', label: 'Code', component: <FaLaptopCode size={32} className="!text-white" /> },
-  { value: 'GiSmartphone', label: 'Mobile', component: <GiSmartphone size={32} className="!text-white" /> },
+  { value: 'FiLayout', label: 'Layout', component: <FiLayout size={32} className="text-white" /> },
+  { value: 'FaLaptopCode', label: 'Code', component: <FaLaptopCode size={32} className="text-white" /> },
+  { value: 'GiSmartphone', label: 'Mobile', component: <GiSmartphone size={32} className="text-white" /> },
 ];
 
 const ServicesManager: React.FC = () => {
@@ -119,31 +119,31 @@ const ServicesManager: React.FC = () => {
   };
 
   return (
-    <div className="!flex !flex-col !gap-8">
-      <div className="!bg-white !p-6 !rounded-xl !shadow-md">
-        <h3 className="!text-xl !font-bold !mb-4">
+    <div className="flex flex-col gap-8">
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <h3 className="text-xl font-bold mb-4">
           {isEditing ? 'Edit Service' : 'Add New Service'}
         </h3>
-        <form onSubmit={handleSubmit} className="!flex !flex-col !gap-4">
-          <div className="!grid !grid-cols-1 md:!grid-cols-2 !gap-4">
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Title</label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Title</label>
               <input
                 type="text"
                 name="title"
                 value={currentService.title}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 required
               />
             </div>
-            <div className="!flex !flex-col !gap-2">
-              <label className="!font-medium">Icon</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium">Icon</label>
               <select
                 name="icon"
                 value={currentService.icon}
                 onChange={handleInputChange}
-                className="!border !rounded-lg !p-2"
+                className="border rounded-lg p-2"
                 required
               >
                 {iconOptions.map(option => (
@@ -152,42 +152,42 @@ const ServicesManager: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <div className="!mt-2 flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-2">
                 <span>Preview:</span>
-                <div className="!flex !items-center !justify-center !w-10 !h-10 !rounded-full !bg-[hsla(14,98%,50%,1)]">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[hsla(14,98%,50%,1)]">
                   {renderIconPreview(currentService.icon)}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Description</label>
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Description</label>
             <textarea
               name="description"
               value={currentService.description}
               onChange={handleInputChange}
-              className="!border !rounded-lg !p-2 !min-h-[100px]"
+              className="border rounded-lg p-2 min-h-[100px]"
               required
             />
           </div>
 
-          <div className="!flex !flex-col !gap-2">
-            <label className="!font-medium">Border Class (optional)</label>
+          <div className="flex flex-col gap-2">
+            <label className="font-medium">Border Class (optional)</label>
             <input
               type="text"
               name="borderClass"
               value={currentService.borderClass}
               onChange={handleInputChange}
-              className="!border !rounded-lg !p-2"
+              className="border rounded-lg p-2"
               placeholder="e.g., second"
             />
           </div>
 
-          <div className="flex gap-4 !mt-4">
+          <div className="flex gap-4 mt-4">
             <button
               type="submit"
-              className="!bg-[var(--color-black)] !text-white !px-6 !py-2 !rounded-lg hover:!bg-[var(--first-color)] transition"
+              className="bg-[var(--color-black)] text-white px-6 py-2 rounded-lg hover:bg-[var(--first-color)] transition"
             >
               {isEditing ? 'Update Service' : 'Add Service'}
             </button>
@@ -195,7 +195,7 @@ const ServicesManager: React.FC = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="!bg-gray-300 !text-gray-800 !px-6 !py-2 !rounded-lg hover:!bg-gray-400 transition"
+                className="bg-gray-300 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
               >
                 Cancel
               </button>
@@ -204,34 +204,34 @@ const ServicesManager: React.FC = () => {
         </form>
       </div>
 
-      <div className="!bg-white !p-6 !rounded-xl !shadow-md">
-        <h3 className="!text-xl !font-bold !mb-4">Manage Services</h3>
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <h3 className="text-xl font-bold mb-4">Manage Services</h3>
         {loading ? (
           <p>Loading services...</p>
         ) : services.length === 0 ? (
           <p>No services found. Add your first service above.</p>
         ) : (
-          <div className="!grid !grid-cols-1 md:!grid-cols-2 lg:!grid-cols-3 !gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service) => (
-              <div key={service.id} className="!border !rounded-lg !overflow-hidden !shadow-sm !p-4">
-                <div className="flex items-center gap-3 !mb-3">
-                  <div className="!flex !items-center !justify-center !w-10 !h-10 !rounded-full !bg-[hsla(14,98%,50%,1)]">
+              <div key={service.id} className="border rounded-lg overflow-hidden shadow-sm p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[hsla(14,98%,50%,1)]">
                     {renderIconPreview(service.icon)}
                   </div>
-                  <h4 className="!font-bold !text-lg">{service.title}</h4>
+                  <h4 className="font-bold text-lg">{service.title}</h4>
                 </div>
-                <p className="!text-sm !mb-4">{service.description}</p>
-                <div className="!flex !gap-2">
+                <p className="text-sm mb-4">{service.description}</p>
+                <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(service)}
-                    className="!bg-blue-500 !text-white !p-2 !rounded-lg hover:!bg-blue-600 transition"
+                    className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
                     aria-label="Edit service"
                   >
                     <FaEdit />
                   </button>
                   <button
                     onClick={() => handleDelete(service)}
-                    className="!bg-red-500 !text-white !p-2 !rounded-lg hover:!bg-red-600 transition"
+                    className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition"
                     aria-label="Delete service"
                   >
                     <FaTrash />

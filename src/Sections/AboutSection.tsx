@@ -1,36 +1,60 @@
 import React, { useState, useEffect } from "react";
-import { FaLinkedin } from "react-icons/fa";
+import { FaLinkedin, FaBriefcase, FaGraduationCap } from "react-icons/fa";
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
+interface AboutData {
+  name: string;
+  title: string;
+  bio: string;
+  experience: string;
+  education: string;
+  skills: string[];
+  image: string;
+}
+
 const AboutSection: React.FC = () => {
-  const [profileData, setProfileData] = useState<any>({
-    name: "Aime Patrick Ndagijimana",
+  const [aboutData, setAboutData] = useState<AboutData>({
+    name: "NDAGIJIMANA Aime Patrick",
+    title: "Full Stack Developer",
     bio: "Passionate about creating Web Pages with UI/UX User Interface, I have years of experience and many clients are happy with the projects carried out.",
-    skills: ["HTML", "CSS & SCSS", "JavaScript", "React", "React Native", "Bootstrap", "Tailwind", "Figma", "TypeScript", "Node.js", "MongoDB", "PostgreSQL", "MySQL", "REST APIs"],
-    aboutImage: "/IMG_2949.jpg",
-    linkedinUrl: "https://www.linkedin.com/"
+    experience: "3+ years of experience in web development",
+    education: "Computer Science degree",
+    skills: ["HTML", "CSS", "JavaScript", "React", "TypeScript", "Node.js", "MongoDB", "REST APIs"],
+    image: "/IMG_2949.jpg",
   });
+  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState<any>({});
   
   useEffect(() => {
-    const fetchProfileData = async () => {
+    const fetchData = async () => {
       try {
+        setLoading(true);
+        
+        // Fetch from the new 'about' collection
+        const aboutDoc = doc(db, 'about', 'main');
+        const aboutSnapshot = await getDoc(aboutDoc);
+        
+        if (aboutSnapshot.exists()) {
+          const data = aboutSnapshot.data() as AboutData;
+          setAboutData(data);
+        }
+        
+        // Also fetch profile data for LinkedIn URL
         const profileDoc = doc(db, 'profile', 'main');
         const profileSnapshot = await getDoc(profileDoc);
         
         if (profileSnapshot.exists()) {
-          const data = profileSnapshot.data();
-          setProfileData({
-            ...profileData,
-            ...data
-          });
+          setProfileData(profileSnapshot.data());
         }
       } catch (error) {
-        console.error('Error fetching profile data:', error);
+        console.error('Error fetching about data:', error);
+      } finally {
+        setLoading(false);
       }
     };
     
-    fetchProfileData();
+    fetchData();
   }, []);
   
   // Helper function to get social link URL
@@ -41,36 +65,27 @@ const AboutSection: React.FC = () => {
     return link?.url || "https://www.linkedin.com/";
   };
   
-  // Helper function to group skills
-  const getFrontendSkills = () => {
-    const frontendSkills = profileData.skills?.filter((skill: string) => 
-      ['HTML', 'CSS', 'SCSS', 'JavaScript', 'React', 'React Native', 'Bootstrap', 'Tailwind', 'Figma', 'TypeScript'].some(s => 
-        skill.toLowerCase().includes(s.toLowerCase())
-      )
+  if (loading) {
+    return (
+      <section className="about section" id="about">
+        <div className="container text-center py-16">
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </section>
     );
-    return frontendSkills?.join(', ') || "HTML, CSS & SCSS, JavaScript, React, React Native, Bootstrap, Tailwind, Figma, TypeScript";
-  };
-  
-  const getBackendSkills = () => {
-    const backendSkills = profileData.skills?.filter((skill: string) => 
-      ['Node', 'MongoDB', 'PostgreSQL', 'MySQL', 'REST', 'API', 'Express', 'Backend', 'Server'].some(s => 
-        skill.toLowerCase().includes(s.toLowerCase())
-      )
-    );
-    return backendSkills?.join(', ') || "Node.js, MongoDB, PostgreSQL, MySQL, REST APIs";
-  };
+  }
   
   return (
   <section className="about section" id="about" aria-label="About section">
-    <div className="about__container container !grid">
+    <div className="about__container container grid">
       <h2 className="section__title-1">
         <span>About Me</span>
       </h2>
       <div className="about__perfil">
         <div className="about__image">
           <img
-            src={profileData.aboutImage || "/IMG_2949.jpg"}
-            alt={`${profileData.name} working at a desk`}
+            src={aboutData.image || "/IMG_2949.jpg"}
+            alt={`${aboutData.name} working at a desk`}
             className="about__img"
           />
           <div className="about__shadow"></div>
@@ -84,17 +99,90 @@ const AboutSection: React.FC = () => {
         </div>
       </div>
       <div className="about__info">
-        <p className="about__description">
-          {profileData.aboutBio || profileData.bio || "Passionate about creating Web Pages with UI/UX User Interface, I have years of experience and many clients are happy with the projects carried out."}
+        <p className="relative text-[#000000] dark:text-gray-300 mb-6 text-2xl font-medium">
+          {aboutData.bio}
         </p>
-        <ul className="about__list">
-          <li className="about__item">
-            <b>Frontend Skills:</b> {getFrontendSkills()}
-          </li>
-          <li className="about__item">
-            <b>Backend Skills:</b> {getBackendSkills()}
-          </li>
-        </ul>
+        
+        {/* Experience */}
+        <div 
+          className="mb-4 p-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group hover:animate-none"
+          style={{
+            '--border-angle': '0turn',
+            border: 'solid 3px transparent',
+            background: `
+              linear-gradient(var(--body-color), var(--body-color)) padding-box,
+              conic-gradient(
+                from var(--border-angle),
+                transparent 20%,
+                #ff6b35,
+                #f44a00,
+                #2a2a2a,
+                #141414 50%,
+                #2a2a2a,
+                #f44a00,
+                #ff6b35,
+                transparent 80%
+              ) border-box,
+              linear-gradient(var(--body-color), var(--body-color)) border-box
+            `,
+            animation: 'border-spin 3s linear infinite',
+          } as React.CSSProperties}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <FaBriefcase className="text-[var(--first-color)] text-lg" />
+            <h3 className="font-bold text-[#000000] dark:text-white">Experience</h3>
+          </div>
+          <p className="text-sm text-[#000000] dark:text-gray-400">{aboutData.experience}</p>
+        </div>
+        
+        {/* Education */}
+        <div 
+          className="mb-4 p-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group hover:animate-none"
+          style={{
+            '--border-angle': '0turn',
+            border: 'solid 3px transparent',
+            background: `
+              linear-gradient(var(--body-color), var(--body-color)) padding-box,
+              conic-gradient(
+                from var(--border-angle),
+                transparent 20%,
+                #ff6b35,
+                #f44a00,
+                #2a2a2a,
+                #141414 50%,
+                #2a2a2a,
+                #f44a00,
+                #ff6b35,
+                transparent 80%
+              ) border-box,
+              linear-gradient(var(--body-color), var(--body-color)) border-box
+            `,
+            animation: 'border-spin 3s linear infinite',
+          } as React.CSSProperties}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <FaGraduationCap className="text-[var(--first-color)] text-lg" />
+            <h3 className="font-bold text-[#000000] dark:text-white">Education</h3>
+          </div>
+          <p className="text-sm text-[#000000] dark:text-gray-400">{aboutData.education}</p>
+        </div>
+        
+        {/* Skills */}
+        {aboutData.skills && aboutData.skills.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-bold text-[#000000] dark:text-white mb-3">Skills</h3>
+            <div className="flex flex-wrap gap-2">
+              {aboutData.skills.map((skill, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1.5 bg-gradient-to-r from-[var(--first-color)] to-orange-600 text-white text-xs font-medium rounded-full shadow-sm"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="about__buttons">
           <a href="#contact" className="button" aria-label="Contact Aime Patrick Ndagijimana">
             <i className="ri-send-plane-line"></i>
