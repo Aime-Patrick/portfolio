@@ -56,70 +56,101 @@ const CertificatesSection: React.FC = () => {
   }
 
   return (
-    <section className="certificates section py-16" id="certificates">
-      <div className="container">
-        <h2 className="section__title-2 text-center mb-4">
-          <span className="bg-gradient-to-r from-[var(--first-color)] to-orange-600 bg-clip-text text-transparent">
-            Certificates & Achievements
-          </span>
-        </h2>
-        <p className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-          Professional certifications and achievements that validate my expertise
-        </p>
+    <section className="certificates section" id="certificates">
+      <h2 className="section__title-2">
+        <span>Certificates & Achievements</span>
+      </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {certificates.map((cert, index) => (
-            <motion.div
-              key={cert.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-200 dark:border-gray-700"
-            >
-              {/* Image */}
-              <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
-                <img
-                  src={cert.image}
-                  alt={cert.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute top-4 left-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg">
-                  <FaAward className="text-[var(--first-color)] text-xl" />
-                </div>
-              </div>
+      <div 
+        className="certificates__container container grid gap-8"
+        style={certificates.length === 1 ? { gridTemplateColumns: '1fr', maxWidth: '350px', marginLeft: 'auto', marginRight: 'auto' } : undefined}
+      >
+        {certificates.map((cert, _index) => (
+          <motion.article
+            key={cert.id}
+            whileHover={{ y: -8 }}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
+            viewport={{ once: true }}
+            className="group relative p-8 min-h-[320px] flex flex-col text-center transition-all duration-300 overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-orange-500/20"
+            style={{
+              '--border-angle': '0turn',
+              border: 'solid 4px transparent',
+              background: `
+                linear-gradient(var(--body-color), var(--body-color)) padding-box,
+                conic-gradient(
+                  from var(--border-angle),
+                  transparent 20%,
+                  #ff6b35,
+                  #f44a00,
+                  #2a2a2a,
+                  #141414 50%,
+                  #2a2a2a,
+                  #f44a00,
+                  #ff6b35,
+                  transparent 80%
+                ) border-box,
+                linear-gradient(var(--body-color), var(--body-color)) border-box
+              `,
+              animation: 'border-spin 3s linear infinite',
+            } as React.CSSProperties}
+          >
+            {/* Background gradient on hover */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--first-color)]/5 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="font-bold text-lg mb-2 text-gray-800 dark:text-white line-clamp-2">
-                  {cert.title}
-                </h3>
-                <p className="text-sm text-[var(--first-color)] font-semibold mb-2">
-                  {cert.issuer}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  <FaCalendar />
-                  <span>{new Date(cert.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
-                  {cert.description}
-                </p>
-                
-                {cert.credentialUrl && (
-                  <a
-                    href={cert.credentialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--first-color)] hover:text-orange-600 transition-colors"
-                  >
-                    View Credential
-                    <FaExternalLinkAlt className="text-xs" />
-                  </a>
-                )}
+            {/* Image */}
+            <div className="relative mb-6 w-full h-40 rounded-xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-300">
+              <img
+                src={cert.image}
+                alt={cert.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+              <div className="absolute top-2 right-2 bg-[var(--first-color)]/90 backdrop-blur-sm p-2 rounded-lg shadow-lg">
+                <FaAward className="text-white text-lg" />
               </div>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="relative text-xl font-bold text-[#000000] dark:text-white mb-2 bg-gradient-to-r from-[#000000] to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text group-hover:text-transparent transition-all duration-300">
+              {cert.title}
+            </h3>
+
+            {/* Issuer */}
+            <p className="relative text-sm text-[var(--first-color)] font-semibold mb-3">
+              {cert.issuer}
+            </p>
+
+            {/* Date */}
+            <div className="relative flex items-center justify-center gap-2 text-xs text-[#000000] dark:text-gray-400 mb-4">
+              <FaCalendar className="text-[10px]" />
+              <span>{new Date(cert.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+            </div>
+
+            {/* Description */}
+            <p className="relative text-[#000000] dark:text-gray-300 leading-relaxed text-sm mb-4 line-clamp-3 flex-1">
+              {cert.description}
+            </p>
+
+            {/* Link */}
+            {cert.credentialUrl && (
+              <a
+                href={cert.credentialUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative inline-flex items-center justify-center gap-2 text-sm font-semibold text-[var(--first-color)] hover:text-white transition-colors group/link"
+              >
+                <span>View Credential</span>
+                <FaExternalLinkAlt className="text-xs group-hover/link:translate-x-1 transition-transform" />
+              </a>
+            )}
+
+            {/* Decorative corner elements */}
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-orange-500/10 to-transparent rounded-bl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-[var(--first-color)]/10 to-transparent rounded-tr-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </motion.article>
+        ))}
       </div>
     </section>
   );

@@ -152,174 +152,193 @@ const AboutManager: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-medium">Loading about data...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-gradient-to-br from-[var(--first-color)] to-orange-600 rounded-xl flex items-center justify-center">
-          <FaUser className="text-white text-2xl" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Manage About Me</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Update your personal information and bio</p>
+    <div className="space-y-6">
+      {/* Header Card */}
+      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl p-6 text-white shadow-xl animate-slideUp">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <FaUser className="text-2xl" />
+          </div>
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold">Manage About Me</h2>
+            <p className="text-gray-300 text-sm mt-1">Update your personal information and bio</p>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        {/* Basic Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <FaUser className="text-[var(--first-color)]" />
-              Full Name *
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={aboutData.name}
-              onChange={handleInputChange}
-              className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-[var(--first-color)] focus:border-transparent"
-              placeholder="e.g., NDAGIJIMANA Aime Patrick"
-              required
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <FaBriefcase className="text-[var(--first-color)]" />
-              Professional Title *
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={aboutData.title}
-              onChange={handleInputChange}
-              className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-[var(--first-color)] focus:border-transparent"
-              placeholder="e.g., Full Stack Developer"
-              required
-            />
-          </div>
-        </div>
+      {/* Form Card */}
+      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 p-8 rounded-2xl shadow-xl border-2 border-orange-500/30 animate-slideUp" style={{ animationDelay: '100ms' }}>
 
-        {/* Bio */}
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-gray-700 dark:text-gray-300">Bio / Introduction *</label>
-          <textarea
-            name="bio"
-            value={aboutData.bio}
-            onChange={handleInputChange}
-            className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 min-h-[120px] bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-[var(--first-color)] focus:border-transparent"
-            placeholder="Tell visitors about yourself, your passion, and what drives you..."
-            required
-          />
-        </div>
-
-        {/* Experience */}
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-            <FaBriefcase className="text-[var(--first-color)]" />
-            Experience *
-          </label>
-          <textarea
-            name="experience"
-            value={aboutData.experience}
-            onChange={handleInputChange}
-            className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 min-h-[100px] bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-[var(--first-color)] focus:border-transparent"
-            placeholder="Describe your professional experience, key roles, and achievements..."
-            required
-          />
-        </div>
-
-        {/* Education */}
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-            <FaGraduationCap className="text-[var(--first-color)]" />
-            Education *
-          </label>
-          <textarea
-            name="education"
-            value={aboutData.education}
-            onChange={handleInputChange}
-            className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 min-h-[100px] bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-[var(--first-color)] focus:border-transparent"
-            placeholder="List your educational background, degrees, and institutions..."
-            required
-          />
-        </div>
-
-        {/* Skills */}
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-            <FaCode className="text-[var(--first-color)]" />
-            Skills
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={skillInput}
-              onChange={(e) => setSkillInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-              className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-[var(--first-color)] focus:border-transparent"
-              placeholder="Add a skill (e.g., React, TypeScript, Node.js)"
-            />
-            <button
-              type="button"
-              onClick={addSkill}
-              className="px-6 py-3 rounded-lg bg-[var(--first-color)] text-white font-semibold hover:bg-orange-600 transition"
-            >
-              Add
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {aboutData.skills.map((skill, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-full text-sm"
-              >
-                {skill}
-                <button
-                  type="button"
-                  onClick={() => removeSkill(skill)}
-                  className="text-red-500 hover:text-red-700 font-bold"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Profile Image */}
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-gray-700 dark:text-gray-300">Profile Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
-          />
-          {imagePreview && (
-            <div className="mt-2">
-              <img
-                src={imagePreview}
-                alt="Profile preview"
-                className="w-32 h-32 rounded-lg object-cover shadow-md"
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
+                <FaUser className="text-orange-400" />
+                Full Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={aboutData.name}
+                onChange={handleInputChange}
+                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                placeholder="e.g., NDAGIJIMANA Aime Patrick"
+                required
               />
             </div>
-          )}
-        </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
+                <FaBriefcase className="text-orange-400" />
+                Professional Title *
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={aboutData.title}
+                onChange={handleInputChange}
+                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                placeholder="e.g., Full Stack Developer"
+                required
+              />
+            </div>
+          </div>
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-gradient-to-r from-[var(--first-color)] to-orange-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-lg hover:shadow-orange-500/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? 'Saving...' : 'Save About Me'}
-        </button>
-      </form>
+          {/* Bio */}
+          <div className="flex flex-col gap-2">
+            <label className="font-medium text-gray-300 text-sm">Bio / Introduction *</label>
+            <textarea
+              name="bio"
+              value={aboutData.bio}
+              onChange={handleInputChange}
+              className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[120px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+              placeholder="Tell visitors about yourself, your passion, and what drives you..."
+              required
+            />
+          </div>
+
+          {/* Experience */}
+          <div className="flex flex-col gap-2">
+            <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
+              <FaBriefcase className="text-orange-400" />
+              Experience *
+            </label>
+            <textarea
+              name="experience"
+              value={aboutData.experience}
+              onChange={handleInputChange}
+              className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[100px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+              placeholder="Describe your professional experience, key roles, and achievements..."
+              required
+            />
+          </div>
+
+          {/* Education */}
+          <div className="flex flex-col gap-2">
+            <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
+              <FaGraduationCap className="text-orange-400" />
+              Education *
+            </label>
+            <textarea
+              name="education"
+              value={aboutData.education}
+              onChange={handleInputChange}
+              className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[100px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+              placeholder="List your educational background, degrees, and institutions..."
+              required
+            />
+          </div>
+
+          {/* Skills */}
+          <div className="flex flex-col gap-2">
+            <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
+              <FaCode className="text-orange-400" />
+              Skills
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                className="flex-1 bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                placeholder="Add a skill (e.g., React, TypeScript, Node.js)"
+              />
+              <button
+                type="button"
+                onClick={addSkill}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold hover:shadow-lg hover:from-orange-600 hover:to-red-600 transition-all"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {aboutData.skills.map((skill, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/20 text-orange-400 rounded-full text-sm font-medium border border-orange-500/30"
+                >
+                  {skill}
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(skill)}
+                    className="text-red-400 hover:text-red-300 font-bold text-lg leading-none"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Profile Image */}
+          <div className="flex flex-col gap-2">
+            <label className="font-medium text-gray-300 text-sm">Profile Image</label>
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="block w-full text-gray-300 border-2 border-orange-500/30 rounded-xl cursor-pointer bg-black/50 focus:outline-none file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-orange-500 file:to-red-500 file:text-white hover:file:from-orange-600 hover:file:to-red-600 file:transition-all"
+              />
+            </div>
+            {imagePreview && (
+              <div className="mt-4 p-4 bg-black/30 rounded-xl border border-orange-500/20">
+                <img
+                  src={imagePreview}
+                  alt="Profile preview"
+                  className="w-40 h-40 rounded-2xl object-cover shadow-lg border-4 border-orange-500/30"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
+          >
+            {saving ? (
+              <span className="flex items-center justify-center gap-3">
+                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                Saving...
+              </span>
+            ) : (
+              'Save About Me'
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

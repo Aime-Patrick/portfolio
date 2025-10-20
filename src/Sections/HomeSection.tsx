@@ -50,9 +50,8 @@ const HomeSection: React.FC = () => {
   
   return (
   <section className="home section" id="home" aria-label="Home section">
-    <div className="home__container container flex flex-col md:flex-row gap-8 max-w-7xl items-center">
-      <div className="flex-1 w-full md:w-auto">
-      <h1 className="home__name w-full">
+    <div className="home__container container grid">
+      <h1 className="home__name">
         <TypeAnimation
           sequence={[
             'I am Aime Patrick Ndagijimana',
@@ -82,19 +81,7 @@ const HomeSection: React.FC = () => {
           className="typing-text"
         />
       </h1>
-      <div className="home__info">
-        <p className="home__description mr-10">
-          <b>{profileData.title}</b>, {profileData.bio}
-        </p>
-        <a href="#about" className="home__scroll" aria-label="Scroll to About section">
-          <div className="home__scroll-box">
-            <IoIosArrowDown className="home__scroll-icon" />
-          </div>
-          <span className="home__scroll-text">Scroll Down</span>
-        </a>
-      </div>
-      </div>
-      <div className="home__perfil flex-shrink-0">
+      <div className="home__perfil">
         <div className="home__image">
           <img src={profileData.profileImage || "/_MAL0853.jpg"} alt={`${profileData.name} portrait`} className="home__img" />
           <div className="home__shadow"></div>
@@ -139,6 +126,17 @@ const HomeSection: React.FC = () => {
             <FaGithub />
           </a>
         </div>
+      </div>
+      <div className="home__info">
+        <p className="home__description">
+          <b>{profileData.title}</b>, {profileData.bio}
+        </p>
+        <a href="#about" className="home__scroll" aria-label="Scroll to About section">
+          <div className="home__scroll-box">
+            <IoIosArrowDown className="home__scroll-icon" />
+          </div>
+          <span className="home__scroll-text">Scroll Down</span>
+        </a>
       </div>
     </div>
   </section>

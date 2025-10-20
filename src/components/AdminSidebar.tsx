@@ -22,14 +22,14 @@ type AdminSidebarProps = {
 };
 
 const navItems = [
-  { label: "Dashboard", icon: <FaHome />, key: "dashboard", gradient: "from-blue-500 to-cyan-500" },
-  { label: "Projects", icon: <FaProjectDiagram />, key: "projects", gradient: "from-purple-500 to-pink-500" },
-  { label: "Services", icon: <FaTools />, key: "services", gradient: "from-green-500 to-emerald-500" },
-  { label: "Certificates", icon: <FaAward />, key: "certificates", gradient: "from-yellow-500 to-amber-500" },
-  { label: "About Me", icon: <FaUserCog />, key: "about", gradient: "from-teal-500 to-cyan-500" },
+  { label: "Dashboard", icon: <FaHome />, key: "dashboard", gradient: "from-orange-500 to-red-500" },
+  { label: "Projects", icon: <FaProjectDiagram />, key: "projects", gradient: "from-orange-500 to-red-600" },
+  { label: "Services", icon: <FaTools />, key: "services", gradient: "from-orange-600 to-red-500" },
+  { label: "Certificates", icon: <FaAward />, key: "certificates", gradient: "from-orange-500 to-red-500" },
+  { label: "About Me", icon: <FaUserCog />, key: "about", gradient: "from-orange-600 to-red-600" },
   { label: "Profile", icon: <FaUserCog />, key: "profile", gradient: "from-orange-500 to-red-500" },
-  { label: "Messages", icon: <FaEnvelope />, key: "messages", gradient: "from-indigo-500 to-purple-500" },
-  { label: "Settings", icon: <FaCog />, key: "settings", gradient: "from-gray-500 to-slate-500" },
+  { label: "Messages", icon: <FaEnvelope />, key: "messages", gradient: "from-orange-500 to-red-600" },
+  { label: "Settings", icon: <FaCog />, key: "settings", gradient: "from-orange-600 to-red-500" },
 ];
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ 
@@ -122,9 +122,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         <div className="h-px bg-gray-700/50 my-3"></div>
 
         {/* Stats Card (Optional) */}
-        <div className="mt-2 p-4 rounded-xl bg-gradient-to-br from-gray-800 to-gray-800/50 border border-gray-700/50">
+        <div className="mt-2 p-4 rounded-xl bg-gradient-to-br from-gray-800 to-gray-800/50 border border-orange-500/30">
           <div className="flex items-center gap-2 mb-2">
-            <FaChartLine className="text-green-400" />
+            <FaChartLine className="text-orange-400" />
             <span className="text-xs font-semibold text-gray-300">Portfolio Stats</span>
           </div>
           <div className="text-2xl font-bold text-white">All Good!</div>

@@ -10,6 +10,116 @@
   to { --border-angle: 1turn; }
 }
 
+/* Admin Dashboard Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.6s ease-out;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.4s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.5s ease-out;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+/* Custom Scrollbar for Admin Dashboard */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
 /* Theme tokens (v4 way) */
 @theme {
   --animate-border-spin: border-spin 3s linear infinite;
@@ -556,6 +666,16 @@ img{
     padding-top: 1rem;
 }
 
+/* ================================
+   CERTIFICATES SECTION
+================================ */
+.certificates__container{
+    grid-template-columns: 250px;
+    justify-content: center;
+    row-gap: 2rem;
+    padding-top: 1rem;
+}
+
 .services__card{
     position: relative;
 }
@@ -703,6 +823,8 @@ img{
    CONTACT SECTION
 ================================ */
 .contact{
+    background-color: var(--container-color);
+    transition: background-color .4s;
     padding-bottom: 0;
 }
 
@@ -1055,6 +1177,9 @@ img{
     .services__container{
         grid-template-columns: repeat(2, 250px);
     }
+    .certificates__container{
+        grid-template-columns: repeat(2, 250px);
+    }
     .projects__container{
         grid-template-columns: repeat(2, 350px);
     }
@@ -1173,6 +1298,12 @@ img{
         font-size: 1.5rem;
         padding: .5rem;
     }
+    .home__container{
+        grid-template-columns: 525px 440px;
+        gap: 1rem 9rem;
+        align-items: center;
+        padding-block: 1rem;
+    }
     .about__container{
         grid-template-columns: 440px 525px;
         gap: 1rem 9rem;
@@ -1236,6 +1367,11 @@ img{
         font-size: 1.5rem;
     }
     .services__container{
+        grid-template-columns: repeat(3, 282px);
+        column-gap: 5rem;
+        padding-block: 3rem 5rem;
+    }
+    .certificates__container{
         grid-template-columns: repeat(3, 282px);
         column-gap: 5rem;
         padding-block: 3rem 5rem;

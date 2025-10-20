@@ -14,14 +14,12 @@ import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SiteSettingsProvider from "./components/SiteSettingsProvider";
-import { Toaster } from "react-hot-toast";
 
 
 const App: React.FC = () => {
   return (
     <SiteSettingsProvider>
       <Router>
-        <Toaster position="top-right" />
         <Routes>
           <Route
             path="/login"

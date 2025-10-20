@@ -11,11 +11,6 @@ import SiteSettingsManager from "./admin/SiteSettingsManager";
 import CertificatesManager from "./admin/CertificatesManager";
 import AboutManager from "./admin/AboutManager";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
-
-export function isAdminAuthenticated(): boolean {
-  return !!auth.currentUser;
-}
 
 const AdminDashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -78,19 +73,16 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--body-color)]">
-      <Toaster position="top-right" />
-      <AdminLayout
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        active={active}
-        setActive={setActive}
-        handleLogout={handleLogout}
-        activeLabel={navLabels[active] || "Dashboard"}
-      >
-        {renderActiveComponent()}
-      </AdminLayout>
-    </div>
+    <AdminLayout
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+      active={active}
+      setActive={setActive}
+      handleLogout={handleLogout}
+      activeLabel={navLabels[active] || "Dashboard"}
+    >
+      {renderActiveComponent()}
+    </AdminLayout>
   );
 };
 
