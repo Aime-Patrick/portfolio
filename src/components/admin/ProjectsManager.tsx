@@ -99,6 +99,10 @@ const ProjectsManager: React.FC = () => {
     
     try {
       const { id, imageFile, image, ...projectData } = currentProject;
+      
+      // Filter out empty links (optional GitHub/Live links)
+      const validLinks = currentProject.links.filter(link => link.url.trim() !== '');
+      
       let imageUrl = image;
       let cloudinaryPublicId = currentProject.cloudinaryPublicId;
 
@@ -136,6 +140,7 @@ const ProjectsManager: React.FC = () => {
         const projectRef = doc(db, 'projects', id);
         await updateDoc(projectRef, {
           ...projectData,
+          links: validLinks,
           image: imageUrl,
           cloudinaryPublicId,
         });
@@ -144,6 +149,7 @@ const ProjectsManager: React.FC = () => {
         // Add new project
         await addDoc(collection(db, 'projects'), {
           ...projectData,
+          links: validLinks,
           image: imageUrl,
           cloudinaryPublicId,
         });
@@ -289,25 +295,27 @@ const ProjectsManager: React.FC = () => {
                 <div key={index} className="p-4 bg-black/50 rounded-xl border-2 border-orange-500/20">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-300">Label</label>
+                      <label className="text-sm font-medium text-gray-300">
+                        Label <span className="text-gray-500 text-xs">(optional)</span>
+                      </label>
                       <input
                         type="text"
                         value={link.label}
                         onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
                         className="bg-black/50 border-2 border-orange-500/20 rounded-lg p-2.5 text-white placeholder-gray-500 focus:border-orange-500 transition-all"
                         placeholder="e.g., GitHub, Live Demo"
-                        required
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-300">URL</label>
+                      <label className="text-sm font-medium text-gray-300">
+                        URL <span className="text-gray-500 text-xs">(optional)</span>
+                      </label>
                       <input
                         type="url"
                         value={link.url}
                         onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
                         className="bg-black/50 border-2 border-orange-500/20 rounded-lg p-2.5 text-white placeholder-gray-500 focus:border-orange-500 transition-all"
                         placeholder="https://..."
-                        required
                       />
                     </div>
                   </div>
