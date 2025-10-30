@@ -61,22 +61,30 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       <div className="absolute inset-0 bg-gradient-to-br from-[var(--first-color)]/5 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
       {/* Image */}
-      <div className="relative mb-6 w-full h-40 rounded-xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-300">
+      <div className="relative mb-6 w-full h-40 rounded-xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-300 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
         <img
           src={image}
           alt={`Screenshot of project: ${title}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
+          style={{ 
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center'
+          }}
+          loading="lazy"
+          decoding="async"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
       </div>
 
       {/* Subtitle */}
-      <p className="relative text-sm text-[var(--first-color)] font-semibold mb-2">
+      <p className="relative text-sm text-[var(--first-color)] font-semibold mb-2 truncate" title={subtitle}>
         {subtitle}
       </p>
 
       {/* Title */}
-      <h3 className="relative text-xl font-bold text-[#000000] dark:text-white mb-4 bg-gradient-to-r from-[#000000] to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text group-hover:text-transparent transition-all duration-300">
+      <h3 className="relative text-xl font-bold text-[#000000] dark:text-white mb-4 bg-gradient-to-r from-[#000000] to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text group-hover:text-transparent transition-all duration-300 line-clamp-2" title={title}>
         {title}
       </h3>
 
@@ -88,20 +96,26 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       {/* Links */}
       {links.length > 0 && (
         <div className="relative flex gap-4 mt-auto">
-          {links.map((link, idx) => (
-            <a
-              key={idx}
-              href={link.url}
-              className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-[var(--first-color)] hover:text-white transition-colors group/link"
-              onClick={idx === 1 ? (e) => handlePopup(e, link.url) : undefined}
-              target={idx === 0 ? "_blank" : undefined}
-              rel="noopener noreferrer"
-            >
-              <span>{link.label}</span>
-              {idx === 0 && <FaGithub className="text-sm group-hover/link:scale-110 transition-transform" />}
-              {idx === 1 && <GoLinkExternal className="text-sm group-hover/link:translate-x-1 transition-transform" />}
-            </a>
-          ))}
+          {links.map((link, idx) => {
+            // Determine icon based on label, not index
+            const isGitHub = link.label.toLowerCase().includes('github') || link.url.toLowerCase().includes('github.com');
+            const isLive = link.label.toLowerCase().includes('live') || link.label.toLowerCase().includes('demo') || (!isGitHub && link.label.toLowerCase() !== 'github');
+            
+            return (
+              <a
+                key={idx}
+                href={link.url}
+                className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-[var(--first-color)] hover:text-white transition-colors group/link"
+                onClick={isLive && !isGitHub ? (e) => handlePopup(e, link.url) : undefined}
+                target={isGitHub ? "_blank" : "_blank"}
+                rel="noopener noreferrer"
+              >
+                <span>{link.label}</span>
+                {isGitHub && <FaGithub className="text-sm group-hover/link:scale-110 transition-transform" />}
+                {isLive && !isGitHub && <GoLinkExternal className="text-sm group-hover/link:translate-x-1 transition-transform" />}
+              </a>
+            );
+          })}
         </div>
       )}
 

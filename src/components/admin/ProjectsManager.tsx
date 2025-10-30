@@ -23,6 +23,8 @@ const ProjectsManager: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [fetchingUrl, setFetchingUrl] = useState(false);
+  const [websiteUrl, setWebsiteUrl] = useState('');
   const [currentProject, setCurrentProject] = useState<Project>({
     id: '',
     image: '',
@@ -76,6 +78,112 @@ const ProjectsManager: React.FC = () => {
     }
   };
 
+  // Function to extract meta tags from a URL
+  const extractMetaTags = async (url: string): Promise<{ title: string; description: string; image: string }> => {
+    try {
+      // Use a CORS proxy to fetch the HTML
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+      const data = await response.json();
+      
+      // Parse the HTML content
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(data.contents, 'text/html');
+      
+      // Extract meta tags
+      const title = 
+        doc.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
+        doc.querySelector('meta[name="twitter:title"]')?.getAttribute('content') ||
+        doc.querySelector('title')?.textContent ||
+        '';
+      
+      const description = 
+        doc.querySelector('meta[property="og:description"]')?.getAttribute('content') ||
+        doc.querySelector('meta[name="twitter:description"]')?.getAttribute('content') ||
+        doc.querySelector('meta[name="description"]')?.getAttribute('content') ||
+        '';
+      
+      const image = 
+        doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
+        doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
+        doc.querySelector('link[rel="icon"]')?.getAttribute('href') ||
+        '';
+      
+      // Handle relative image URLs
+      const absoluteImageUrl = image.startsWith('http') 
+        ? image 
+        : image.startsWith('/') 
+          ? new URL(image, url).href 
+          : new URL(image, url).href;
+      
+      return {
+        title: title.trim(),
+        description: description.trim(),
+        image: absoluteImageUrl || '',
+      };
+    } catch (error) {
+      console.error('Error extracting meta tags:', error);
+      throw error;
+    }
+  };
+
+  // Function to generate screenshot
+  const generateScreenshot = (url: string): string => {
+    // Using screenshot.rocks free API
+    // Alternative: You can use other services like apiflash.com, screenshotapi.net
+    return `https://api.screenshot.rocks/v1/default?url=${encodeURIComponent(url)}&width=1280&height=720&format=png`;
+  };
+
+  // Main function to fetch website info
+  const handleFetchFromUrl = async () => {
+    if (!websiteUrl.trim()) {
+      toast.error('Please enter a valid URL');
+      return;
+    }
+
+    // Validate URL
+    let validUrl = websiteUrl.trim();
+    if (!validUrl.startsWith('http://') && !validUrl.startsWith('https://')) {
+      validUrl = `https://${validUrl}`;
+    }
+
+    try {
+      setFetchingUrl(true);
+      toast.loading('Fetching website information...');
+
+      // Generate screenshot URL immediately
+      const screenshotUrl = generateScreenshot(validUrl);
+
+      // Extract meta tags
+      const metaData = await extractMetaTags(validUrl);
+
+      // Update the form
+      setCurrentProject(prev => ({
+        ...prev,
+        title: metaData.title || prev.title,
+        description: metaData.description || prev.description,
+        // Use OG image if available, otherwise use screenshot
+        image: metaData.image || screenshotUrl,
+        // Update Live link URL
+        links: prev.links.map((link, idx) => 
+          idx === 1 
+            ? { ...link, url: validUrl, label: link.label || 'Live' }
+            : link
+        ),
+      }));
+
+      toast.dismiss();
+      toast.success('Website information fetched successfully!');
+      
+    } catch (error) {
+      console.error('Error fetching website info:', error);
+      toast.dismiss();
+      toast.error('Failed to fetch website information. Please enter details manually.');
+    } finally {
+      setFetchingUrl(false);
+    }
+  };
+
   const resetForm = () => {
     setCurrentProject({
       id: '',
@@ -85,6 +193,7 @@ const ProjectsManager: React.FC = () => {
       description: '',
       links: [{ url: '', label: 'GitHub' }, { url: '', label: 'Live' }],
     });
+    setWebsiteUrl('');
     setIsEditing(false);
   };
 
@@ -133,6 +242,40 @@ const ProjectsManager: React.FC = () => {
         
         toast.dismiss();
         toast.success('Image uploaded successfully!');
+      } 
+      // Handle external image URLs (from OG images or screenshots)
+      else if (image && image.startsWith('http') && !image.includes('cloudinary.com') && !image.includes('data:')) {
+        toast.loading('Uploading image from URL to Cloudinary...');
+        
+        try {
+          // Upload image from URL to Cloudinary
+          const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+          const formData = new FormData();
+          formData.append('file', image);
+          formData.append('upload_preset', UPLOAD_PRESET);
+          formData.append('folder', 'portfolio/projects');
+
+          const response = await fetch(uploadUrl, {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to upload image from URL to Cloudinary');
+          }
+
+          const data = await response.json();
+          imageUrl = data.secure_url;
+          cloudinaryPublicId = data.public_id;
+          
+          toast.dismiss();
+          toast.success('Image uploaded to Cloudinary!');
+        } catch (error) {
+          console.error('Error uploading external image:', error);
+          toast.dismiss();
+          // Continue with the external URL if upload fails
+          toast.error('Could not upload image to Cloudinary, using external URL');
+        }
       }
 
       if (isEditing) {
@@ -219,6 +362,49 @@ const ProjectsManager: React.FC = () => {
         </div>
         <div className="p-6">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* URL Fetch Section */}
+          <div className="p-6 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border-2 border-orange-500/30">
+            <label className="font-semibold text-white text-sm flex items-center gap-2 mb-3">
+              <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
+                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
+              </svg>
+              Quick Import from URL
+            </label>
+            <div className="flex gap-3">
+              <input
+                type="url"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                className="flex-1 bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                placeholder="Enter website URL (e.g., https://example.com)"
+              />
+              <button
+                type="button"
+                onClick={handleFetchFromUrl}
+                disabled={fetchingUrl || !websiteUrl.trim()}
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {fetchingUrl ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Fetching...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd"/>
+                    </svg>
+                    <span>Fetch Info</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              This will automatically extract title, description, and image from the website
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex flex-col gap-2">
               <label className="font-medium text-gray-300 text-sm">Title</label>

@@ -105,6 +105,8 @@ const CertificatesSection: React.FC = () => {
                 src={cert.image}
                 alt={cert.title}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
               <div className="absolute top-2 right-2 bg-[var(--first-color)]/90 backdrop-blur-sm p-2 rounded-lg shadow-lg">

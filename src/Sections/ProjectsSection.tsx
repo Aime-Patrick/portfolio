@@ -78,8 +78,8 @@ const ProjectsSection: React.FC = () => {
 				<p>Loading projects...</p>
 			</div>
 		) : (
-			<div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 container place-items-center"
-			style={projects.length === 1 ? { gridTemplateColumns: '1fr', maxWidth: '350px', marginLeft: 'auto', marginRight: 'auto' } : undefined}
+			<div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 container place-items-center"
+			style={projects.length === 1 ? { gridTemplateColumns: '1fr', maxWidth: '450px', marginLeft: 'auto', marginRight: 'auto' } : undefined}
 			>
 				{projects.map((project, idx) => (
 					<ProjectCard key={idx} {...project} />

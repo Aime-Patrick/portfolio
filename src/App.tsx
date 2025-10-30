@@ -1,19 +1,27 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 // import ScrollUpButton from "./components/ScrollUpButton";
 import HomeSection from "./Sections/HomeSection";
-import AboutSection from "./Sections/AboutSection";
-import ServicesSection from "./Sections/ServicesSection";
-import ProjectsSection from "./Sections/ProjectsSection";
-import CertificatesSection from "./Sections/CertificatesSection";
-import ContactSection from "./Sections/ContactSection";
-import Chatbot from "./components/Chatbot";
+// Lazy load sections below the fold for better initial load performance
+const AboutSection = lazy(() => import("./Sections/AboutSection"));
+const ServicesSection = lazy(() => import("./Sections/ServicesSection"));
+const ProjectsSection = lazy(() => import("./Sections/ProjectsSection"));
+const CertificatesSection = lazy(() => import("./Sections/CertificatesSection"));
+const ContactSection = lazy(() => import("./Sections/ContactSection"));
+const Chatbot = lazy(() => import("./components/Chatbot"));
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import AdminLogin from "./components/AdminLogin";
-import AdminDashboard from "./components/AdminDashboard";
+const AdminLogin = lazy(() => import("./components/AdminLogin"));
+const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
 import ProtectedRoute from "./components/ProtectedRoute";
 import SiteSettingsProvider from "./components/SiteSettingsProvider";
+
+// Loading fallback component
+const SectionLoader = () => (
+  <div className="flex items-center justify-center py-16">
+    <div className="w-8 h-8 border-2 border-[var(--first-color)] border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 
 const App: React.FC = () => {
@@ -23,13 +31,19 @@ const App: React.FC = () => {
         <Routes>
           <Route
             path="/login"
-            element={<AdminLogin />}
+            element={
+              <Suspense fallback={<SectionLoader />}>
+                <AdminLogin />
+              </Suspense>
+            }
           />
           <Route
             path="/admin"
             element={
               <ProtectedRoute>
-                <AdminDashboard />
+                <Suspense fallback={<SectionLoader />}>
+                  <AdminDashboard />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -40,13 +54,25 @@ const App: React.FC = () => {
                 <Header />
                 <main className="main">
                   <HomeSection />
-                  <AboutSection />
-                  <ServicesSection />
-                  <ProjectsSection />
-                  <CertificatesSection />
-                  <ContactSection />
+                  <Suspense fallback={<SectionLoader />}>
+                    <AboutSection />
+                  </Suspense>
+                  <Suspense fallback={<SectionLoader />}>
+                    <ServicesSection />
+                  </Suspense>
+                  <Suspense fallback={<SectionLoader />}>
+                    <ProjectsSection />
+                  </Suspense>
+                  <Suspense fallback={<SectionLoader />}>
+                    <CertificatesSection />
+                  </Suspense>
+                  <Suspense fallback={<SectionLoader />}>
+                    <ContactSection />
+                  </Suspense>
                 </main>
-                <Chatbot />
+                <Suspense fallback={null}>
+                  <Chatbot />
+                </Suspense>
                 <Footer />
                 {/* <ScrollUpButton /> */}
               </>

@@ -32,10 +32,17 @@
   <meta name="apple-mobile-web-app-title" content="Aime Patrick Portfolio" />
   <link rel="apple-touch-icon" href="/Icon.png" />
   
-  <!-- Preconnect for Performance -->
+  <!-- Resource Hints for Performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+  <link rel="dns-prefetch" href="https://firebase.googleapis.com" />
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+  <!-- Preload critical assets -->
+  <link rel="preload" href="/Icon.png" as="image" type="image/png" />
+  <!-- Optimize font loading -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@400;500;600;700&display=swap" /></noscript>
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://portfolio-three-navy-77.vercel.app/" />

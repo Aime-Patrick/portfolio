@@ -87,6 +87,8 @@ const AboutSection: React.FC = () => {
             src={aboutData.image || "/IMG_2949.jpg"}
             alt={`${aboutData.name} working at a desk`}
             className="about__img"
+            loading="lazy"
+            decoding="async"
           />
           <div className="about__shadow"></div>
           <div className="geomatric-box"></div>
