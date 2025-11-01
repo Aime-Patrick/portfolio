@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { toast } from 'react-hot-toast';
-import { FaHome, FaImage, FaLink, FaPlus, FaTrash, FaEdit } from 'react-icons/fa';
+import { FaHome, FaImage, FaLink, FaPlus, FaTrash } from 'react-icons/fa';
 import ConfirmationDialog from '../ConfirmationDialog';
 
 // Cloudinary configuration
