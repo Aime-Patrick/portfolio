@@ -2,17 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { toast } from 'react-hot-toast';
-import { FaUser, FaGraduationCap, FaBriefcase, FaCode } from 'react-icons/fa';
+import { FaUser, FaGraduationCap, FaBriefcase, FaCode, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import ConfirmationDialog from '../ConfirmationDialog';
 
 // Cloudinary configuration
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
+interface Experience {
+  id?: string;
+  title: string;
+  description: string;
+  shortDescription?: string;
+  company?: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  isCurrent?: boolean;
+}
+
 interface AboutData {
   name: string;
   title: string;
   bio: string;
-  experience: string;
+  experience: Experience[];
   education: string;
   skills: string[];
   image: string;
@@ -24,7 +37,7 @@ const AboutManager: React.FC = () => {
     name: '',
     title: '',
     bio: '',
-    experience: '',
+    experience: [],
     education: '',
     skills: [],
     image: '',
@@ -32,8 +45,24 @@ const AboutManager: React.FC = () => {
   const [skillInput, setSkillInput] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [imageInputRef, setImageInputRef] = useState<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Experience form state
+  const [showExperienceForm, setShowExperienceForm] = useState(false);
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
+  const [experienceForm, setExperienceForm] = useState<Experience>({
+    title: '',
+    description: '',
+    shortDescription: '',
+    company: '',
+    location: '',
+    startDate: '',
+    endDate: '',
+    isCurrent: false,
+  });
 
   useEffect(() => {
     fetchAboutData();
@@ -46,8 +75,24 @@ const AboutManager: React.FC = () => {
       const aboutSnapshot = await getDoc(aboutDoc);
       
       if (aboutSnapshot.exists()) {
-        const data = aboutSnapshot.data() as AboutData;
-        setAboutData(data);
+        const data = aboutSnapshot.data() as any;
+        // Handle backward compatibility: convert string experience to array
+        let experiences: Experience[] = [];
+        if (Array.isArray(data.experience)) {
+          experiences = data.experience;
+        } else if (typeof data.experience === 'string' && data.experience.trim()) {
+          // Convert old string format to array
+          experiences = [{
+            title: 'Experience',
+            description: data.experience,
+            shortDescription: data.experience.substring(0, 100) + '...',
+          }];
+        }
+        
+        setAboutData({
+          ...data,
+          experience: experiences,
+        });
         setImagePreview(data.image || '');
       }
     } catch (error) {
@@ -66,9 +111,30 @@ const AboutManager: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const maxSize = 20 * 1024 * 1024; // 20 MB
+      
+      if (file.size > maxSize) {
+        toast.error(`File size too large. Maximum size is 20 MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleDeleteImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setAboutData(prev => {
+      const { cloudinaryPublicId, ...rest } = prev;
+      return {
+        ...rest,
+        image: '',
+      };
+    });
+    toast.success('Image removed!');
   };
 
   const addSkill = () => {
@@ -86,6 +152,80 @@ const AboutManager: React.FC = () => {
       ...prev,
       skills: prev.skills.filter(s => s !== skill),
     }));
+  };
+
+  // Experience management functions
+  const resetExperienceForm = () => {
+    setExperienceForm({
+      title: '',
+      description: '',
+      shortDescription: '',
+      company: '',
+      location: '',
+      startDate: '',
+      endDate: '',
+      isCurrent: false,
+    });
+    setEditingExperience(null);
+    setShowExperienceForm(false);
+  };
+
+  const handleExperienceFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setExperienceForm(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setExperienceForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleAddExperience = () => {
+    if (!experienceForm.title.trim() || !experienceForm.description.trim()) {
+      toast.error('Title and description are required');
+      return;
+    }
+
+    const newExperience: Experience = {
+      ...experienceForm,
+      id: editingExperience?.id || `exp-${Date.now()}`,
+      shortDescription: experienceForm.shortDescription || experienceForm.description.substring(0, 100) + '...',
+    };
+
+    if (editingExperience) {
+      // Update existing experience
+      setAboutData(prev => ({
+        ...prev,
+        experience: prev.experience.map(exp => 
+          exp.id === editingExperience.id ? newExperience : exp
+        ),
+      }));
+      toast.success('Experience updated!');
+    } else {
+      // Add new experience
+      setAboutData(prev => ({
+        ...prev,
+        experience: [...prev.experience, newExperience],
+      }));
+      toast.success('Experience added!');
+    }
+
+    resetExperienceForm();
+  };
+
+  const handleEditExperience = (exp: Experience) => {
+    setExperienceForm(exp);
+    setEditingExperience(exp);
+    setShowExperienceForm(true);
+  };
+
+  const handleRemoveExperience = (expId: string | undefined) => {
+    if (!expId) return;
+    setAboutData(prev => ({
+      ...prev,
+      experience: prev.experience.filter(exp => exp.id !== expId),
+    }));
+    toast.success('Experience removed!');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,6 +249,7 @@ const AboutManager: React.FC = () => {
         formData.append('file', imageFile);
         formData.append('upload_preset', UPLOAD_PRESET);
         formData.append('folder', 'portfolio/about');
+        formData.append('max_file_size', '20971520'); // 20 MB in bytes
 
         const response = await fetch(
           `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
@@ -119,7 +260,9 @@ const AboutManager: React.FC = () => {
         );
 
         if (!response.ok) {
-          throw new Error('Failed to upload image');
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData?.error?.message || 'Failed to upload image';
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
@@ -132,18 +275,23 @@ const AboutManager: React.FC = () => {
 
       // Save to Firestore
       const aboutDoc = doc(db, 'about', 'main');
-      await setDoc(aboutDoc, {
+      const dataToSave: any = {
         ...aboutData,
         image: imageUrl,
-        cloudinaryPublicId,
-      });
+      };
+      // Only include cloudinaryPublicId if it has a value
+      if (cloudinaryPublicId) {
+        dataToSave.cloudinaryPublicId = cloudinaryPublicId;
+      }
+      await setDoc(aboutDoc, dataToSave);
 
       toast.success('About section updated successfully!');
       setImageFile(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving about data:', error);
       toast.dismiss();
-      toast.error('Failed to save about data');
+      const errorMessage = error?.message || 'Failed to save about data';
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -226,20 +374,201 @@ const AboutManager: React.FC = () => {
             />
           </div>
 
-          {/* Experience */}
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-              <FaBriefcase className="text-orange-400" />
-              Experience *
-            </label>
-            <textarea
-              name="experience"
-              value={aboutData.experience}
-              onChange={handleInputChange}
-              className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[100px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-              placeholder="Describe your professional experience, key roles, and achievements..."
-              required
-            />
+          {/* Experience Section */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
+                <FaBriefcase className="text-orange-400" />
+                Experience
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  resetExperienceForm();
+                  setShowExperienceForm(true);
+                }}
+                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-lg hover:shadow-lg hover:from-orange-600 hover:to-red-600 transition-all flex items-center gap-2"
+              >
+                <FaPlus className="text-xs" />
+                Add Experience
+              </button>
+            </div>
+
+            {/* Experience Form Dialog */}
+            {showExperienceForm && (
+              <div className="p-6 bg-black/30 rounded-xl border-2 border-orange-500/30">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  {editingExperience ? 'Edit Experience' : 'Add New Experience'}
+                </h3>
+                
+                <div className="flex flex-col gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-gray-300 text-sm">Job Title *</label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={experienceForm.title}
+                        onChange={handleExperienceFormChange}
+                        className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                        placeholder="e.g., Full Stack Developer"
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-gray-300 text-sm">Company</label>
+                      <input
+                        type="text"
+                        name="company"
+                        value={experienceForm.company}
+                        onChange={handleExperienceFormChange}
+                        className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                        placeholder="Company name"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-gray-300 text-sm">Start Date</label>
+                      <input
+                        type="text"
+                        name="startDate"
+                        value={experienceForm.startDate}
+                        onChange={handleExperienceFormChange}
+                        className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                        placeholder="e.g., Jan 2020"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-gray-300 text-sm">End Date</label>
+                      <input
+                        type="text"
+                        name="endDate"
+                        value={experienceForm.endDate}
+                        onChange={handleExperienceFormChange}
+                        disabled={experienceForm.isCurrent}
+                        className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:opacity-50"
+                        placeholder={experienceForm.isCurrent ? "Current" : "e.g., Dec 2023"}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="isCurrent"
+                      checked={experienceForm.isCurrent}
+                      onChange={handleExperienceFormChange}
+                      className="w-4 h-4 rounded border-orange-500 text-orange-500 focus:ring-orange-500"
+                    />
+                    <label className="text-gray-300 text-sm">Current Position</label>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-gray-300 text-sm">Location</label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={experienceForm.location}
+                      onChange={handleExperienceFormChange}
+                      className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                      placeholder="e.g., Remote, Kigali, Rwanda"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-gray-300 text-sm">Short Description (for card preview)</label>
+                    <textarea
+                      name="shortDescription"
+                      value={experienceForm.shortDescription}
+                      onChange={handleExperienceFormChange}
+                      className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[60px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                      placeholder="Brief description shown on card (optional, auto-generated if empty)"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-gray-300 text-sm">Full Description *</label>
+                    <textarea
+                      name="description"
+                      value={experienceForm.description}
+                      onChange={handleExperienceFormChange}
+                      className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[120px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                      placeholder="Detailed description shown in dialog..."
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={resetExperienceForm}
+                      className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddExperience}
+                      className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all"
+                    >
+                      {editingExperience ? 'Update' : 'Add'} Experience
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Experience Cards List */}
+            {aboutData.experience.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                {aboutData.experience.map((exp, index) => (
+                  <div
+                    key={exp.id || index}
+                    className="relative p-4 bg-gradient-to-br from-gray-900/50 via-black/50 to-gray-900/50 border-2 border-orange-500/30 rounded-xl shadow-lg hover:shadow-xl hover:border-orange-500/60 transition-all duration-300"
+                  >
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <h4 className="text-orange-400 font-bold text-lg">{exp.title}</h4>
+                          {exp.company && (
+                            <p className="text-gray-300 text-sm mt-1">{exp.company}</p>
+                          )}
+                          {(exp.startDate || exp.endDate) && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              {exp.startDate || 'N/A'}
+                              {exp.isCurrent ? ' - Present' : exp.endDate ? ` - ${exp.endDate}` : ''}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleEditExperience(exp)}
+                            className="p-2 bg-orange-500/30 rounded-lg hover:bg-orange-500/50 text-orange-300 hover:text-white transition-all"
+                            aria-label="Edit experience"
+                          >
+                            <FaEdit className="text-sm" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveExperience(exp.id)}
+                            className="p-2 bg-red-500/30 rounded-lg hover:bg-red-500/50 text-red-300 hover:text-white transition-all"
+                            aria-label="Remove experience"
+                          >
+                            <FaTrash className="text-sm" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-400 line-clamp-2 mt-2">
+                        {exp.shortDescription || exp.description.substring(0, 100) + '...'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Education */}
@@ -305,19 +634,35 @@ const AboutManager: React.FC = () => {
             <label className="font-medium text-gray-300 text-sm">Profile Image</label>
             <div className="relative">
               <input
+                ref={(input) => setImageInputRef(input)}
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
                 className="block w-full text-gray-300 border-2 border-orange-500/30 rounded-xl cursor-pointer bg-black/50 focus:outline-none file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-orange-500 file:to-red-500 file:text-white hover:file:from-orange-600 hover:file:to-red-600 file:transition-all"
               />
             </div>
-            {imagePreview && (
-              <div className="mt-4 p-4 bg-black/30 rounded-xl border border-orange-500/20">
+            {(imagePreview || aboutData.image) && (
+              <div className="mt-4 p-4 bg-black/30 rounded-xl border border-orange-500/20 relative group">
                 <img
-                  src={imagePreview}
+                  src={imagePreview || aboutData.image}
                   alt="Profile preview"
-                  className="w-40 h-40 rounded-2xl object-cover shadow-lg border-4 border-orange-500/30"
+                  onClick={() => imageInputRef?.click()}
+                  className="w-40 h-40 rounded-2xl object-cover shadow-lg border-4 border-orange-500/30 cursor-pointer hover:border-orange-500 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="absolute top-6 right-6 p-2 bg-red-500/90 hover:bg-red-600 text-white rounded-lg shadow-lg transition-all hover:scale-110 opacity-0 group-hover:opacity-100"
+                  aria-label="Delete image"
+                >
+                  <FaTrash className="text-sm" />
+                </button>
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/70 px-3 py-1 rounded-lg text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  Click image to change
+                </div>
               </div>
             )}
           </div>
@@ -339,6 +684,18 @@ const AboutManager: React.FC = () => {
           </button>
         </form>
       </div>
+
+      {/* Delete Image Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteImage}
+        title="Delete Image"
+        message="Are you sure you want to delete the current image? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 };

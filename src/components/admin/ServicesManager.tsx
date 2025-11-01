@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { toast } from 'react-hot-toast';
-import { FaEdit, FaTrash } from 'react-icons/fa';
-import { FiLayout } from 'react-icons/fi';
+import { FaEdit, FaTrash, FaServer, FaCloud, FaCog, FaDatabase, FaShieldAlt, FaLock, FaMicrochip, FaDocker } from 'react-icons/fa';
+import { FiLayout, FiLink2 } from 'react-icons/fi';
 import { FaLaptopCode } from 'react-icons/fa6';
 import { GiSmartphone } from 'react-icons/gi';
 
@@ -19,6 +19,15 @@ const iconOptions = [
   { value: 'FiLayout', label: 'Layout', component: <FiLayout size={32} className="text-white" /> },
   { value: 'FaLaptopCode', label: 'Code', component: <FaLaptopCode size={32} className="text-white" /> },
   { value: 'GiSmartphone', label: 'Mobile', component: <GiSmartphone size={32} className="text-white" /> },
+  { value: 'FaServer', label: 'Server', component: <FaServer size={32} className="text-white" /> },
+  { value: 'FaCloud', label: 'Cloud', component: <FaCloud size={32} className="text-white" /> },
+  { value: 'FaMicrochip', label: 'CPU/Robot/Smart', component: <FaMicrochip size={32} className="text-white" /> },
+  { value: 'FaCog', label: 'Settings', component: <FaCog size={32} className="text-white" /> },
+  { value: 'FaDocker', label: 'Docker', component: <FaDocker size={32} className="text-white" /> },
+  { value: 'FaDatabase', label: 'Database', component: <FaDatabase size={32} className="text-white" /> },
+  { value: 'FiLink2', label: 'Plug/Link/Share', component: <FiLink2 size={32} className="text-white" /> },
+  { value: 'FaShieldAlt', label: 'Shield', component: <FaShieldAlt size={32} className="text-white" /> },
+  { value: 'FaLock', label: 'Lock', component: <FaLock size={32} className="text-white" /> },
 ];
 
 const ServicesManager: React.FC = () => {

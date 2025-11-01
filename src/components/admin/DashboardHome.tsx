@@ -19,6 +19,7 @@ const DashboardHome: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [recentMessages, setRecentMessages] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -36,9 +37,9 @@ const DashboardHome: React.FC = () => {
       const servicesSnapshot = await getDocs(collection(db, 'services'));
       const servicesCount = servicesSnapshot.size;
       
-      // Fetch skills count
-      const profileDoc = await getDoc(doc(db, 'profile', 'main'));
-      const skillsCount = profileDoc.exists() ? profileDoc.data()?.skills?.length || 0 : 0;
+      // Fetch skills count from 'about' collection
+      const aboutDoc = await getDoc(doc(db, 'about', 'main'));
+      const skillsCount = aboutDoc.exists() ? (aboutDoc.data()?.skills?.length || 0) : 0;
       
       // Fetch messages
       const messagesSnapshot = await getDocs(collection(db, 'messages'));
@@ -53,6 +54,36 @@ const DashboardHome: React.FC = () => {
         }))
         .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, 5);
+
+      // Get recent activity from projects, services, and messages
+      const projectsList = projectsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        type: 'project',
+        action: 'Project updated',
+        title: doc.data().title || 'Project',
+        timestamp: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
+      }));
+
+      const servicesList = servicesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        type: 'service',
+        action: 'Service updated',
+        title: doc.data().title || 'Service',
+        timestamp: doc.data().updatedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || new Date(),
+      }));
+
+      const messagesList = messagesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        type: 'message',
+        action: 'New message',
+        title: doc.data().name || 'Message',
+        timestamp: doc.data().timestamp?.toDate?.() || new Date(),
+      }));
+
+      // Combine and sort all activities
+      const allActivities = [...projectsList, ...servicesList, ...messagesList]
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        .slice(0, 3);
       
       setStats({
         projects: projectsCount,
@@ -62,6 +93,7 @@ const DashboardHome: React.FC = () => {
       });
       
       setRecentMessages(recentMessagesData);
+      setRecentActivity(allActivities);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -77,6 +109,17 @@ const DashboardHome: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
+  };
+
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    return formatDate(date);
   };
 
   if (loading) {
@@ -202,12 +245,21 @@ const DashboardHome: React.FC = () => {
               </svg>
             </div>
           </div>
-          <div className="text-4xl font-bold mb-2">Excellent</div>
-          <p className="text-orange-100 text-sm">All systems operational. Your portfolio is performing at its best.</p>
+          <div className="text-4xl font-bold mb-2">
+            {stats.projects > 0 && stats.services > 0 && stats.skills > 0 ? 'Excellent' : 
+             stats.projects > 0 || stats.services > 0 ? 'Good' : 'Needs Setup'}
+          </div>
+          <p className="text-orange-100 text-sm">
+            {stats.projects > 0 && stats.services > 0 && stats.skills > 0 
+              ? 'All systems operational. Your portfolio is performing at its best.'
+              : stats.projects > 0 || stats.services > 0
+              ? 'Add more content to improve your portfolio.'
+              : 'Start by adding projects, services, and skills.'}
+          </p>
           <div className="mt-4 pt-4 border-t border-white/20">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-orange-100">Uptime</span>
-              <span className="font-semibold">99.9%</span>
+              <span className="text-orange-100">Total Items</span>
+              <span className="font-semibold">{stats.projects + stats.services + stats.skills}</span>
             </div>
           </div>
         </div>
@@ -220,39 +272,53 @@ const DashboardHome: React.FC = () => {
             </svg>
             Recent Activity
           </h3>
-          <div className="space-y-3">
-            {[
-              { action: 'Project updated', time: '2 hours ago' },
-              { action: 'New message', time: '5 hours ago' },
-              { action: 'Service added', time: 'Yesterday' },
-            ].map((activity, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 bg-orange-500/10 hover:bg-orange-500/20 rounded-xl transition-colors border border-orange-500/20">
-                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-white">{activity.action}</p>
-                  <p className="text-xs text-gray-400">{activity.time}</p>
-                </div>
+          <div className="space-y-3 max-h-[220px] overflow-y-auto scrollbar-thin scrollbar-thumb-orange-500/50 scrollbar-track-gray-800/50 hover:scrollbar-thumb-orange-500/70 transition-colors" style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(249, 115, 22, 0.5) rgba(31, 41, 55, 0.5)'
+          }}>
+            {recentActivity.length === 0 ? (
+              <div className="text-center py-6 animate-fadeIn">
+                <p className="text-gray-400 text-sm">No recent activity</p>
+                <p className="text-gray-500 text-xs mt-2">Activity will appear here as you add content</p>
               </div>
-            ))}
+            ) : (
+              recentActivity.map((activity, idx) => (
+                <div 
+                  key={activity.id || idx} 
+                  className="flex items-center gap-3 p-3 bg-orange-500/10 hover:bg-orange-500/20 rounded-xl transition-all duration-300 border border-orange-500/20 hover:border-orange-500/40 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/20"
+                  style={{ 
+                    animation: `slideInRight 0.5s ease-out ${idx * 0.1}s both`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">{activity.action}</p>
+                    <p className="text-xs text-gray-400">{getTimeAgo(activity.timestamp)}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Performance Metrics */}
+        {/* Content Summary */}
         <div className="bg-gradient-to-br from-orange-600/50 to-red-600/50 rounded-2xl p-6 text-white shadow-xl animate-slideUp" style={{ animationDelay: '500ms' }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Performance</h3>
+            <h3 className="text-lg font-semibold">Content Summary</h3>
             <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
               </svg>
             </div>
           </div>
-          <div className="text-4xl font-bold mb-2">+24%</div>
-          <p className="text-orange-100 text-sm">Portfolio views increased this month</p>
+          <div className="text-4xl font-bold mb-2">{stats.projects + stats.services}</div>
+          <p className="text-orange-100 text-sm">Total projects and services in your portfolio</p>
           <div className="mt-4 pt-4 border-t border-white/20">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-orange-100">Total Views</span>
-              <span className="font-semibold">1.2k</span>
+              <span className="text-orange-100">Skills</span>
+              <span className="font-semibold">{stats.skills}</span>
             </div>
           </div>
         </div>

@@ -53,7 +53,7 @@ const HomeSection: React.FC = () => {
     <div className="home__container container grid">
       <h1 className="home__name">
         <TypeAnimation
-          sequence={[
+          sequence={profileData.typeAnimationSequence || [
             'I am Aime Patrick Ndagijimana',
             3000,
             'Full Stack & AI Solutions Engineer',

@@ -70,6 +70,14 @@ const ProjectsManager: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const maxSize = 20 * 1024 * 1024; // 20 MB
+      
+      if (file.size > maxSize) {
+        toast.error(`File size too large. Maximum size is 20 MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
       setCurrentProject(prev => ({
         ...prev,
         imageFile: file,
@@ -223,6 +231,7 @@ const ProjectsManager: React.FC = () => {
         formData.append('file', imageFile);
         formData.append('upload_preset', UPLOAD_PRESET);
         formData.append('folder', 'portfolio/projects'); // Organize in Cloudinary
+        formData.append('max_file_size', '20971520'); // 20 MB in bytes
 
         const response = await fetch(
           `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
@@ -233,7 +242,9 @@ const ProjectsManager: React.FC = () => {
         );
 
         if (!response.ok) {
-          throw new Error('Failed to upload image to Cloudinary');
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData?.error?.message || 'Failed to upload image to Cloudinary';
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
@@ -278,33 +289,34 @@ const ProjectsManager: React.FC = () => {
         }
       }
 
+      const projectDataToSave: any = {
+        ...projectData,
+        links: validLinks,
+        image: imageUrl,
+      };
+      // Only include cloudinaryPublicId if it has a value
+      if (cloudinaryPublicId) {
+        projectDataToSave.cloudinaryPublicId = cloudinaryPublicId;
+      }
+
       if (isEditing) {
         // Update existing project
         const projectRef = doc(db, 'projects', id);
-        await updateDoc(projectRef, {
-          ...projectData,
-          links: validLinks,
-          image: imageUrl,
-          cloudinaryPublicId,
-        });
+        await updateDoc(projectRef, projectDataToSave);
         toast.success('Project updated successfully');
       } else {
         // Add new project
-        await addDoc(collection(db, 'projects'), {
-          ...projectData,
-          links: validLinks,
-          image: imageUrl,
-          cloudinaryPublicId,
-        });
+        await addDoc(collection(db, 'projects'), projectDataToSave);
         toast.success('Project added successfully');
       }
 
       resetForm();
       fetchProjects();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving project:', error);
       toast.dismiss();
-      toast.error('Failed to save project. Check console for details.');
+      const errorMessage = error?.message || 'Failed to save project. Check console for details.';
+      toast.error(errorMessage);
     }
   };
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import ServiceCard from "../components/ServiceCard";
-import { FiLayout } from "react-icons/fi";
+import { FiLayout, FiLink2 } from "react-icons/fi";
 import { FaLaptopCode } from "react-icons/fa6";
 import { GiSmartphone } from "react-icons/gi";
+import { FaServer, FaCloud, FaCog, FaDatabase, FaShieldAlt, FaLock, FaMicrochip, FaDocker } from "react-icons/fa";
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 // Fallback services data
@@ -37,6 +38,24 @@ const getIconComponent = (iconName: string) => {
       return <FaLaptopCode size={32} className="text-white" />;
     case 'GiSmartphone':
       return <GiSmartphone size={32} className="text-white" />;
+    case 'FaServer':
+      return <FaServer size={32} className="text-white" />;
+    case 'FaCloud':
+      return <FaCloud size={32} className="text-white" />;
+    case 'FaMicrochip':
+      return <FaMicrochip size={32} className="text-white" />;
+    case 'FaCog':
+      return <FaCog size={32} className="text-white" />;
+    case 'FaDocker':
+      return <FaDocker size={32} className="text-white" />;
+    case 'FaDatabase':
+      return <FaDatabase size={32} className="text-white" />;
+    case 'FiLink2':
+      return <FiLink2 size={32} className="text-white" />;
+    case 'FaShieldAlt':
+      return <FaShieldAlt size={32} className="text-white" />;
+    case 'FaLock':
+      return <FaLock size={32} className="text-white" />;
     default:
       return <FiLayout size={32} className="text-white" />;
   }

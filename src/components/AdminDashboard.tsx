@@ -10,6 +10,7 @@ import MessagesManager from "./admin/MessagesManager";
 import SiteSettingsManager from "./admin/SiteSettingsManager";
 import CertificatesManager from "./admin/CertificatesManager";
 import AboutManager from "./admin/AboutManager";
+import HomeManager from "./admin/HomeManager";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const AdminDashboard: React.FC = () => {
@@ -22,7 +23,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const section = params.get("section");
-    if (section && ["dashboard", "projects", "services", "certificates", "about", "profile", "messages", "settings"].includes(section)) {
+    if (section && ["dashboard", "home", "projects", "services", "certificates", "about", "profile", "messages", "settings"].includes(section)) {
       setActive(section);
     }
   }, [location]);
@@ -34,12 +35,13 @@ const AdminDashboard: React.FC = () => {
 
   const handleLogout = async () => {
     await signOut(auth);
-    navigate("/login");
+    navigate("/");
   };
 
   // Map active key to label for AdminLayout
   const navLabels: Record<string, string> = {
     dashboard: "Dashboard",
+    home: "Home Section",
     projects: "Projects",
     services: "Services",
     certificates: "Certificates",
@@ -52,6 +54,8 @@ const AdminDashboard: React.FC = () => {
   // Render the appropriate component based on active section
   const renderActiveComponent = () => {
     switch (active) {
+      case "home":
+        return <HomeManager />;
       case "projects":
         return <ProjectsManager />;
       case "services":

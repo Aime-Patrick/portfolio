@@ -23,6 +23,7 @@ type AdminSidebarProps = {
 
 const navItems = [
   { label: "Dashboard", icon: <FaHome />, key: "dashboard", gradient: "from-orange-500 to-red-500" },
+  { label: "Home Section", icon: <FaHome />, key: "home", gradient: "from-orange-500 to-red-500" },
   { label: "Projects", icon: <FaProjectDiagram />, key: "projects", gradient: "from-orange-500 to-red-600" },
   { label: "Services", icon: <FaTools />, key: "services", gradient: "from-orange-600 to-red-500" },
   { label: "Certificates", icon: <FaAward />, key: "certificates", gradient: "from-orange-500 to-red-500" },
