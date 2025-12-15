@@ -70,7 +70,7 @@ const ProjectsSection: React.FC = () => {
   return (
 	<section className="projects section" id="project" aria-label="Projects section">
 		<div className="projects__container container">
-		<h2 className="section__title-1">
+		<h2 className="section__title-1 text-3xl md:text-4xl lg:text-5xl mb-8">
 			<span>Projects</span>
 		</h2>
 		{loading ? (

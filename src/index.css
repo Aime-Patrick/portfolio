@@ -5,6 +5,16 @@
 @source "./index.html";
 @source "./src";
 
+/* Prevent horizontal overflow across the site */
+body{
+    overflow-x: hidden;
+}
+html{
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 /* Keyframes for rotating border animation (must be global for inline styles) */
 @keyframes border-spin {
   to { --border-angle: 1turn; }
@@ -207,6 +217,7 @@
     initial-value: 0turn;
 }
 
+
 /* ================================
    BASE STYLES
 ================================ */
@@ -250,8 +261,11 @@ img{
    REUSABLE CSS CLASSES
 ================================ */
 .container{
-    max-width: 1140px;
-    margin-inline:1.5rem;
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-inline: 1rem;
 }
 
 .grid{
@@ -261,12 +275,12 @@ img{
 
 .section{
     padding-block: 3rem 2rem;
+    width: 100%;
 }
 
 .section__title-1,
 .section__title-2{
     position: relative;
-    font-size: var(--h1-font-size);
     width: max-content;
     margin: .75rem auto 2rem;
 }
@@ -311,80 +325,10 @@ img{
     top: -5px;
 }
 
-.main{
-    overflow: hidden;
-}
-
 /* ================================
    HEADER & NAV
 ================================ */
-.header{
-    position: fixed;
-    width: 100%;
-    top: 0;
-    left: 0;
-    z-index: var(--z-fixed);
-    transition: box-shadow .4s;
-    padding: 1.5rem;
-}
 
-.nav{
-    position: relative;
-    height: var(--header-height);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.nav__logo{
-    display: flex;
-    column-gap: .5rem;
-    align-items: center;
-    font-weight: var(--font-semi-bold);
-    color: var(--title-color);
-}
-
-.nav__logo-circle,
-.nav__toggle{
-    width: 32px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-}
-
-.nav__logo-circle{
-    background-color: var(--color-black);
-    color: var(--white-color);
-}
-
-.nav__toggle{
-    font-size: 1.25rem;
-    cursor: pointer;
-}
-
-/* Mobile menu styling moved to Tailwind in Header.tsx */
-
-.nav__list{
-    display: flex;
-    flex-direction: column;
-    row-gap: 2.5rem;
-}
-
-.nav__close{
-    position: absolute;
-    top: 1rem;
-    right: 1.5rem;
-}
-
-/* Show menu */
-.show-menu{
-    right: 0;
-}
-
-/* Add shadow header */
-.shadow-header{
-    box-shadow: 0 1px 16px hsla(0,0%,0%,.12);
-}
 
 
 /* ================================
@@ -445,11 +389,21 @@ img{
 
 .home__image{
     width: 220px;
+    transition: transform .6s ease, filter .6s ease;
 }
 
 .home__img{
     position: relative;
     z-index: 10;
+    transition: transform .6s ease;
+}
+
+.home__image--shifted{
+    transform: translateY(-6px);
+}
+
+.home__image--shifted .home__img{
+    transform: translateY(-4px) scale(1.02);
 }
 
 .home__shadow{
@@ -470,6 +424,8 @@ img{
     filter: invert(0);
     width: 50px;
     transition: filter .4s;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .home__arrow{
@@ -497,6 +453,7 @@ img{
     margin: auto 0;
     display: grid;
     row-gap: 1rem;
+    max-width: 100%;
 }
 
 .home__social-link{
@@ -537,6 +494,88 @@ img{
     display: none;
 }
 
+.typing-text{
+    display: inline-block;
+    min-height: 4.75rem;
+    line-height: 1.2;
+    vertical-align: middle;
+    transition: opacity .6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: opacity;
+}
+
+.typing-text--fade{
+    animation-duration: .6s;
+    animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+    animation-fill-mode: both;
+}
+
+.typing-text--phase-0{
+    animation-name: typing-fade-only;
+}
+.typing-text--phase-1{
+    animation-name: typing-fade-only;
+}
+
+@keyframes typing-fade-only{
+    from{
+        opacity: 0;
+    }
+    to{
+        opacity: 1;
+    }
+}
+
+@media screen and (max-width: 767px){
+    .home__container{
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 2rem;
+        padding-top: 1.5rem;
+        padding-inline: 1rem;
+    }
+    .about__container{
+        grid-template-columns: 1fr;
+        padding-inline: 1rem;
+        row-gap: 2rem;
+    }
+    .home__name{
+        font-size: clamp(2rem, 6vw, var(--biggest-font-size));
+        line-height: 1.15;
+        padding-inline: 1rem;
+    }
+    .home__image{
+        width: min(70vw, 260px);
+    }
+    .home__perfil{
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    .home__arrow,
+    .home__line{
+        display: none;
+    }
+    .home__social{
+        position: static;
+        display: flex;
+        column-gap: .75rem;
+        row-gap: .75rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    .home__info{
+        margin-top: 1.25rem;
+        padding-inline: 1rem;
+        text-align: center;
+    }
+    .home__description{
+        margin-bottom: 1rem;
+    }
+    .home__scroll{
+        margin-inline: auto;
+    }
+}
+
 .home__scroll-box{
     background-color: var(--color-black);
     color: var(--white-color);
@@ -574,12 +613,15 @@ img{
    ABOUT SECTION
 ================================ */
 .about{
+    width: 100% !important;
     background-color: var(--container-color);
     transition: background-color .4s;
 }
 
 .about__container{
-    row-gap: 0;
+    width: 100%;
+    row-gap: 1.5rem;
+    column-gap: 1.5rem;
 }
 
 .about__perfil{
@@ -671,20 +713,26 @@ img{
    SERVICES SECTION
 ================================ */
 .services__container{
-    grid-template-columns: 250px;
+    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     justify-content: center;
-    row-gap: 2rem;
+    row-gap: 1.5rem;
     padding-top: 1rem;
+    gap: 1.5rem;
+    align-items: stretch;
 }
 
 /* ================================
    CERTIFICATES SECTION
 ================================ */
 .certificates__container{
-    grid-template-columns: 250px;
+    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     justify-content: center;
-    row-gap: 2rem;
+    row-gap: 1.5rem;
     padding-top: 1rem;
+    gap: 1.5rem;
+    align-items: stretch;
 }
 
 .services__card{
@@ -1156,6 +1204,7 @@ img{
     .projects__container{
         grid-template-columns: 350px;
         justify-content: center;
+        width: 100%;
     }
     .contact__data{
         width: 350px;
@@ -1165,6 +1214,7 @@ img{
     .contact__container{
         grid-template-columns: 500px;
         justify-content: center;
+        width: 100%;
     }
     .contact__group{
         grid-template-columns: repeat(2, 1fr);
@@ -1184,12 +1234,45 @@ img{
     }
 }
 
+@media screen and (max-width: 640px){
+    .services__container,
+    .certificates__container{
+        padding-inline: .75rem;
+        gap: 1.25rem;
+    }
+    .contact__container{
+        grid-template-rows: auto;
+        row-gap: 1.5rem;
+    }
+    .contact__data{
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 2rem 1.25rem;
+        border-bottom: 3px solid var(--first-color);
+    }
+    .contact__data .section__title-2{
+        transform: none;
+    }
+    .contact__mail{
+        margin-top: 0;
+        padding: 2.5rem 1.25rem 1.5rem;
+    }
+    .contact__group{
+        grid-template-columns: 1fr;
+        column-gap: 0;
+    }
+    .contact__social{
+        padding: 1.5rem 1.25rem 2rem;
+    }
+}
+
 @media screen and (min-width: 768px){
     .services__container{
-        grid-template-columns: repeat(2, 250px);
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
     }
     .certificates__container{
-        grid-template-columns: repeat(2, 250px);
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
     }
     .projects__container{
         grid-template-columns: repeat(2, 350px);
@@ -1228,6 +1311,14 @@ img{
     }
     .nav__menu{
         margin-left: auto;
+    }
+    .services__container{
+        grid-template-columns: repeat(3, minmax(260px, 1fr));
+        gap: 2rem;
+    }
+    .certificates__container{
+        grid-template-columns: repeat(3, minmax(260px, 1fr));
+        gap: 2rem;
     }
     .home__perfil{
         grid-column: 2 / 3;
@@ -1291,14 +1382,14 @@ img{
     }
     .home__arrow{
         top: 4.5rem;
-        left: -5rem;
+        left: -8rem;
         rotate: 80deg;
-        width: 80px;
+        width: 70px;
     }
     .home__line{
-        left: -15rem;
+        left: -10rem;
         bottom: 4rem;
-        width: 80px;
+        width: 70px;
         rotate: 30deg;
     }
     .home__social{

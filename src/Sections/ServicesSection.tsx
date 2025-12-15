@@ -101,7 +101,7 @@ const ServicesSection: React.FC = () => {
 
   return (
     <section className="services section" id="services" aria-label="Services section">
-      <h2 className="section__title-2">
+      <h2 className="section__title-2 text-3xl md:text-4xl lg:text-5xl mb-8">
         <span>Services</span>
       </h2>
       {loading ? (

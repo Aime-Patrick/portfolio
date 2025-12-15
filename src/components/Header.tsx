@@ -1,170 +1,190 @@
 import React, { useState, useEffect } from "react";
-import { IoMenu } from "react-icons/io5";
-import { IoClose } from "react-icons/io5";
+import { IoMenu, IoClose } from "react-icons/io5";
 import { useSiteSettings } from "./SiteSettingsProvider";
 
 const Header: React.FC = () => {
   const { settings } = useSiteSettings();
   const [showMenu, setShowMenu] = useState(false);
-  const [shadow, setShadow] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
 
-  // Handle scroll shadow and active section
+  // Handle scroll effects and active section tracking
   useEffect(() => {
     const handleScroll = () => {
-      setShadow(window.scrollY >= 50);
-      
-      // Update active section based on scroll position
+      setScrolled(window.scrollY >= 20);
+
+      // Section tracking logic
       const sections = ["home", "about", "services", "project", "contact"];
       for (const section of sections) {
         const element = document.getElementById(section);
         if (element) {
           const rect = element.getBoundingClientRect();
-          if (rect.top <= 100 && rect.bottom >= 100) {
+          // Adjust threshold for better accuracy
+          if (rect.top <= 150 && rect.bottom >= 150) {
             setActiveSection(section);
             break;
           }
         }
       }
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close menu on nav link click (mobile)
   const handleNavLinkClick = (section: string) => {
     setShowMenu(false);
     setActiveSection(section);
   };
 
+  const navLinks = [
+    { href: "#home", label: "Home", id: "home" },
+    { href: "#about", label: "About", id: "about" },
+    { href: "#services", label: "Services", id: "services" },
+    { href: "#project", label: "Projects", id: "project" },
+  ];
+
   return (
-    <>
-      <header 
-        className={`header transition-all duration-300 ${
-          shadow ? "shadow-lg shadow-black/20 border-b border-gray-800/50 bg-black/50 backdrop-blur-sm" : ""
-        }`} 
-        id="header"
-      >
-        <nav className="flex items-center justify-between px-4 md:px-8">
-          {/* Logo */}
-          <a 
-            href="/" 
-            className="flex items-center gap-2 group transition-all duration-300 hover:scale-105"
+    <header
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-black/80 backdrop-blur-md shadow-lg shadow-black/10 py-3"
+          : "bg-transparent py-5"
+      }`}
+      id="header"
+    >
+      {/* 
+        Using 'container mx-auto' to match the global layout width.
+        'px-4' ensures consistent gutters with other sections.
+      */}
+      <div className="container mx-auto px-4">
+        <nav className="flex items-center justify-between">
+          
+          {/* Logo Section */}
+          <a
+            href="/"
+            className="flex items-center gap-2 group z-50 relative"
+            aria-label="Home"
           >
-            <span className="px-4 py-2 rounded-full bg-gradient-to-br text-white from-[var(--first-color)] to-orange-600 shadow-lg shadow-orange-500/30 transition-transform group-hover:rotate-12">
-              P
-            </span>
-            <span className="nav__logo_name bg-gradient-to-r from-[var(--first-color)] to-orange-600 bg-clip-text text-transparent font-bold">
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--first-color)] to-orange-600 shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-6">
+              <span className="text-white font-bold text-xl font-body">P</span>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent group-hover:to-white transition-all duration-300">
               {settings.siteTitle || "CodeWithPatrick."}
             </span>
           </a>
 
-          {/* Desktop Menu */}
-          <ul className="hidden lg:flex items-center gap-1 xl:gap-2">
-            {[
-              { href: "#home", label: "Home", id: "home" },
-              { href: "#about", label: "About", id: "about" },
-              { href: "#services", label: "Services", id: "services" },
-              { href: "#project", label: "Projects", id: "project" },
-            ].map((item) => (
-              <li key={item.id}>
-                <a
-                  href={item.href}
-                  onClick={() => handleNavLinkClick(item.id)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 relative group ${
-                    activeSection === item.id
-                      ? "text-[var(--first-color)] bg-orange-900/20"
-                      : "text-[var(--text-color)] hover:text-[var(--first-color)] hover:bg-white/5"
-                  }`}
-                >
-                  {item.label}
-                  {activeSection === item.id && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-[var(--first-color)] to-orange-600 rounded-full"></span>
-                  )}
-              </a>
-            </li>
-            ))}
-            <li>
-              <a
-                href="#contact"
-                onClick={() => handleNavLinkClick("contact")}
-                className="ml-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[var(--first-color)] to-orange-600 text-white font-semibold shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all duration-300 hover:scale-105 hover:-translate-y-0.5"
-              >
-                Contact Me
-              </a>
-            </li>
-          </ul>
-
-          {/* Mobile Menu */}
-          <div 
-            className={`fixed top-0 right-0 h-screen w-full bg-black/50 backdrop-blur-sm shadow-2xl transition-transform duration-500 ease-out z-50 ${
-              showMenu ? "translate-x-0" : "translate-x-full"
-            } lg:hidden`}
-          >
-            {/* Mobile Menu Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h3 className="text-lg font-bold bg-gradient-to-r text-[#f44a00] from-[var(--first-color)] to-orange-600 bg-clip-text">
-                {settings.siteTitle || "Menu"}
-              </h3>
-              <button
-                onClick={() => setShowMenu(false)}
-                className="p-2 rounded-full hover:bg-[#1f1f1f] transition-colors"
-                aria-label="Close menu"
-              >
-                <IoClose className="text-2xl text-white" />
-              </button>
-            </div>
-
-            {/* Mobile Menu Items */}
-            <ul className="flex flex-col gap-1 p-4">
-              {[
-                { href: "#home", label: "Home", id: "home" },
-                { href: "#about", label: "About", id: "about" },
-                { href: "#services", label: "Services", id: "services" },
-                { href: "#project", label: "Projects", id: "project" },
-                { href: "#contact", label: "Contact", id: "contact" },
-              ].map((item) => (
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center bg-white/5 rounded-full px-2 py-1.5 border border-white/5 backdrop-blur-sm">
+            <ul className="flex items-center gap-1">
+              {navLinks.map((item) => (
                 <li key={item.id}>
                   <a
                     href={item.href}
                     onClick={() => handleNavLinkClick(item.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                    className={`relative px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:text-white ${
                       activeSection === item.id
-                        ? "bg-gradient-to-r from-[var(--first-color)] to-orange-600 !text-white shadow-lg shadow-orange-500/30"
-                        : "text-gray-300 hover:bg-[#1f1f1f]"
+                        ? "text-white"
+                        : "text-gray-400 hover:bg-white/5"
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full transition-all ${
-                      activeSection === item.id ? "bg-white" : "bg-[var(--first-color)]"
-                    }`}></span>
                     {item.label}
+                    {activeSection === item.id && (
+                      <span className="absolute inset-0 bg-white/10 rounded-full -z-10 animate-fade-in" />
+                    )}
                   </a>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Overlay */}
-          {showMenu && (
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-              onClick={() => setShowMenu(false)}
-            />
-          )}
-
-          {/* Right Section */}
-          <div className="flex items-center gap-3">
-            <button
-              className="lg:hidden p-2 rounded-lg hover:bg-[#1f1f1f] transition-colors"
-              onClick={() => setShowMenu(true)}
-              aria-label="Open menu"
+          {/* CTA Button (Desktop) */}
+          <div className="hidden lg:block">
+            <a
+              href="#contact"
+              onClick={() => handleNavLinkClick("contact")}
+              className="group relative inline-flex items-center justify-center px-6 py-2.5 overflow-hidden font-medium text-white transition duration-300 ease-out rounded-full shadow-md shadow-orange-500/20"
             >
-              <IoMenu className="text-2xl text-white" />
-            </button>
-        </div>
-      </nav>
+              <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-[var(--first-color)] to-orange-600 group-hover:scale-105 transition-transform duration-300"></span>
+              <span className="relative flex items-center gap-2">
+                Contact Me
+                <svg 
+                  className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </span>
+            </a>
+          </div>
+
+          {/* Mobile Toggle */}
+          <button
+            className="lg:hidden relative z-50 p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+            onClick={() => setShowMenu(!showMenu)}
+            aria-label="Toggle menu"
+          >
+            {showMenu ? (
+              <IoClose className="text-2xl" />
+            ) : (
+              <IoMenu className="text-2xl" />
+            )}
+          </button>
+
+          {/* Mobile Menu Overlay */}
+          <div
+            className={`fixed inset-0 bg-black/60 backdrop-blur-md z-40 transition-opacity duration-300 lg:hidden ${
+              showMenu ? "opacity-100 visible" : "opacity-0 invisible"
+            }`}
+            onClick={() => setShowMenu(false)}
+          />
+
+          {/* Mobile Menu Drawer */}
+          <div
+            className={`fixed top-0 right-0 h-screen w-[280px] bg-[#1a1a1a] shadow-2xl z-40 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) lg:hidden ${
+              showMenu ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex flex-col h-full pt-20 px-6 pb-6">
+              <ul className="flex flex-col gap-2">
+                {navLinks.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={item.href}
+                      onClick={() => handleNavLinkClick(item.id)}
+                      className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 ${
+                        activeSection === item.id
+                          ? "bg-gradient-to-r from-[var(--first-color)]/20 to-transparent text-[var(--first-color)] border-l-2 border-[var(--first-color)]"
+                          : "text-gray-400 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <span className="text-lg font-medium">{item.label}</span>
+                    </a>
+                  </li>
+                ))}
+                <li>
+                  <a
+                    href="#contact"
+                    onClick={() => handleNavLinkClick("contact")}
+                    className="flex items-center gap-4 px-4 py-3 mt-4 rounded-xl bg-gradient-to-r from-[var(--first-color)] to-orange-600 text-white font-medium shadow-lg shadow-orange-500/20"
+                  >
+                    Contact Me
+                  </a>
+                </li>
+              </ul>
+              
+              <div className="mt-auto">
+                <p className="text-xs text-center text-gray-600">
+                  © 2025 {settings.siteTitle || "Portfolio"}.
+                </p>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </div>
     </header>
-    </>
   );
 };
 

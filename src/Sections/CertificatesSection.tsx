@@ -57,7 +57,7 @@ const CertificatesSection: React.FC = () => {
 
   return (
     <section className="certificates section" id="certificates">
-      <h2 className="section__title-2">
+      <h2 className="section__title-2 text-3xl md:text-4xl lg:text-5xl mb-8">
         <span>Certificates & Achievements</span>
       </h2>
 

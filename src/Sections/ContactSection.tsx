@@ -51,7 +51,7 @@ const ContactSection: React.FC = () => {
     <section className="contact section" id="contact" aria-label="Contact section">
       <div className="contact__container grid">
         <div className="contact__data">
-          <h2 className="section__title-2">
+          <h2 className="section__title-2 text-3xl md:text-4xl lg:text-5xl mb-8">
             <span>Contact Me</span>
           </h2>
           <p className="contact__description-1">
@@ -62,7 +62,7 @@ const ContactSection: React.FC = () => {
           </p>
           <div className="geomatric-box"></div>
         </div>
-        <div className="contact__mail bg-[#1f1f1f]">
+        <div className="contact__mail bg-[#1f1f1f]/80 backdrop-blur-sm">
           <h2 className="contact__title">Send Me A Message</h2>
           <form className="contact__form" id="contact-form" ref={form} onSubmit={sendEmail} aria-label="Contact form">
             <div className="contact__group">

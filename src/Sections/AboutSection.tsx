@@ -117,8 +117,8 @@ const AboutSection: React.FC = () => {
   
   return (
   <section className="about section" id="about" aria-label="About section">
-    <div className="about__container container grid">
-      <h2 className="section__title-1">
+    <div className="about__container container grid w-full">
+      <h2 className="section__title-1 text-3xl md:text-4xl lg:text-5xl mb-8">
         <span>About Me</span>
       </h2>
       <div className="about__perfil">
@@ -174,7 +174,7 @@ const AboutSection: React.FC = () => {
               <FaBriefcase className="text-[var(--first-color)] text-lg" />
               <h3 className="font-bold text-[#000000] dark:text-white text-xl">Experience</h3>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {getExperiences().slice(0, 2).map((exp, index) => (
                 <button
                   key={exp.id || index}
