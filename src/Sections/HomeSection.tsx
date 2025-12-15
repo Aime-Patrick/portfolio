@@ -41,7 +41,7 @@ const HomeSection: React.FC = () => {
       { platform: "github", url: "https://www.github.com/AimePazzo" }
     ]
   });
-  const [imageShift, setImageShift] = useState(false);
+
   const [textCycle, setTextCycle] = useState(0);
 
 
@@ -77,7 +77,6 @@ const HomeSection: React.FC = () => {
   
   const animationSequence = useMemo(
     () => buildTypeSequence(profileData.typeAnimationSequence as string[] | undefined, () => {
-      setImageShift((prev) => !prev);
       setTextCycle((prev) => prev + 1);
     }),
     [profileData.typeAnimationSequence]
@@ -119,7 +118,7 @@ const HomeSection: React.FC = () => {
         initial="hidden"
         animate="visible"
       >
-        <motion.h1 className="home__name" variants={itemVariants}>
+        <motion.h1 className="home__name text-center lg:text-left mt-6 md:mt-0 relative z-10" variants={itemVariants}>
           <TypeAnimation
             sequence={animationSequence}
             wrapper="span"
@@ -131,30 +130,33 @@ const HomeSection: React.FC = () => {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               fontWeight: 'bold',
-              minHeight: '4.75rem',
-              lineHeight: 1.15
+              minHeight: '50px', // Fixed height for mobile to prevent jumping
+              lineHeight: 0.9
             }}
             repeat={Infinity}
             cursor={true}
-            className={`typing-text typing-text--fade typing-text--phase-${textCycle % 2}`}
+            className={`typing-text typing-text--fade typing-text--phase-${textCycle % 2} text-2xl sm:text-2xl lg:text-4xl max-w-[600px]`}
           />
         </motion.h1>
 
-        <div className="home__perfil">
+        <div className="home__perfil relative flex flex-col items-center">
           <motion.div 
-            className={`home__image ${imageShift ? 'home__image--shifted' : ''}`}
+            className="home__image w-[280px] h-[350px] sm:w-[320px] sm:h-[400px] lg:w-[450px] lg:h-[550px] mx-auto"
             variants={itemVariants}
-            whileHover={{ scale: 1.02, rotate: 1 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <img src={profileData.profileImage || "/_MAL0853.jpg"} alt={`${profileData.name} portrait`} className="home__img" />
-            <div className="home__shadow"></div>
+            <img 
+              src={profileData.profileImage || "/_MAL0853.jpg"} 
+              alt={`${profileData.name} portrait`} 
+              className="home__img w-full h-full object-cover rounded-3xl relative z-10" 
+            />
+            <div className="home__shadow absolute top-2 -right-2 w-[calc(70%+1rem)] h-[calc(80%+1rem)] border-4 border-[var(--first-color)] rounded-3xl z-[-1] bg-[var(--container-color)]"></div>
             
             {/* Animated Decor Elements */}
             <motion.img
               src="curved-arrow.svg"
               alt="Curved arrow graphic"
-              className="home__arrow dark:invert"
+              className="home__arrow absolute top-8 -right-8 w-[50px] sm:w-[80px] z-20"
               animate={{ 
                 y: [0, -10, 0],
                 rotate: [80, 85, 80]
@@ -168,7 +170,7 @@ const HomeSection: React.FC = () => {
             <motion.img
               src="random-lines.svg"
               alt="Decorative random lines"
-              className="home__line dark:invert"
+              className="home__line absolute bottom-12 -left-8 w-[50px] sm:w-[80px] z-20"
               animate={{ 
                 x: [0, 5, 0],
                 opacity: [0.6, 1, 0.6]
@@ -180,22 +182,10 @@ const HomeSection: React.FC = () => {
                 delay: 1
               }}
             />
-            <motion.div 
-              className="geomatric-box"
-              animate={{ 
-                rotate: 360,
-                scale: [1, 1.2, 1]
-              }}
-              transition={{ 
-                duration: 8, 
-                repeat: Infinity, 
-                ease: "linear" 
-              }}
-            />
           </motion.div>
 
-          {/* Social Links with hover effects */}
-          <div className="home__social">
+          {/* Social Links - Responsive Position: Bottom Center on Mobile, Side on Desktop */}
+          <div className="home__social relative z-20 flex justify-center gap-6 mt-12 lg:absolute lg:top-5 lg:-right-16 lg:flex-col lg:gap-6 lg:mt-0">
             {[
               { component: IoLogoInstagram, link: getSocialLink("instagram"), label: "Instagram" },
               { component: FaLinkedin, link: getSocialLink("linkedin"), label: "LinkedIn" },
@@ -206,7 +196,7 @@ const HomeSection: React.FC = () => {
                 href={link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="home__social-link"
+                className="home__social-link text-2xl text-[var(--text-color)] hover:text-[var(--first-color)] transition-colors p-[6px] bg-[var(--black-color-light)] hover:bg-[var(--color-black)] grid place-items-center"
                 aria-label={label}
                 variants={itemVariants}
                 custom={index}
@@ -219,20 +209,20 @@ const HomeSection: React.FC = () => {
           </div>
         </div>
 
-        <motion.div className="home__info" variants={itemVariants}>
-          <p className="home__description">
-            <b>{profileData.title}</b>, {profileData.bio}
+        <motion.div className="home__info mt-8 lg:mt-16 text-center px-4" variants={itemVariants}>
+          <p className="home__description mb-6 text-[var(--title-color)]">
+            <b className="bg-gradient-to-r from-[var(--first-color)] via-[#ff6b35] to-[var(--first-color)] text-transparent bg-clip-text pr-1 font-bold">{profileData.title}</b>, {profileData.bio}
           </p>
           <motion.a 
             href="#about" 
-            className="home__scroll" 
+            className="home__scroll block w-max mx-auto" 
             aria-label="Scroll to About section"
             whileHover={{ y: 5 }}
           >
-            <div className="home__scroll-box">
-              <IoIosArrowDown className="home__scroll-icon" />
+            <div className="home__scroll-box w-9 h-9 bg-[var(--color-black)] text-white grid place-items-center text-base cursor-pointer overflow-hidden transition-colors hover:bg-[var(--first-color)]">
+              <IoIosArrowDown className="home__scroll-icon animate-bounce" />
             </div>
-            <span className="home__scroll-text">Scroll Down</span>
+            <span className="home__scroll-text hidden">Scroll Down</span>
           </motion.a>
         </motion.div>
       </motion.div>
