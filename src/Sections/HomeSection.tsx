@@ -150,13 +150,13 @@ const HomeSection: React.FC = () => {
               alt={`${profileData.name} portrait`} 
               className="home__img w-full h-full object-cover rounded-3xl relative z-10" 
             />
-            <div className="home__shadow absolute top-2 -right-2 w-[calc(70%+1rem)] h-[calc(80%+1rem)] border-4 border-[var(--first-color)] rounded-3xl z-[-1] bg-[var(--container-color)]"></div>
+            <div className="home__shadow  absolute top-2 right-0 lg:-right-2  w-[calc(70%+1rem)] h-[calc(80%+1rem)] border-4 border-[var(--first-color)] rounded-3xl z-[-1] bg-[var(--container-color)]"></div>
             
             {/* Animated Decor Elements */}
             <motion.img
               src="curved-arrow.svg"
               alt="Curved arrow graphic"
-              className="home__arrow absolute top-8 -right-8 w-[50px] sm:w-[80px] z-20"
+              className="home__arrow absolute top-8 right-0 lg:-right-8 w-[50px] sm:w-[80px] z-20"
               animate={{ 
                 y: [0, -10, 0],
                 rotate: [80, 85, 80]
@@ -170,7 +170,7 @@ const HomeSection: React.FC = () => {
             <motion.img
               src="random-lines.svg"
               alt="Decorative random lines"
-              className="home__line absolute bottom-12 -left-8 w-[50px] sm:w-[80px] z-20"
+              className="home__line absolute bottom-12 lg:-left-8 w-[50px] sm:w-[80px] z-20"
               animate={{ 
                 x: [0, 5, 0],
                 opacity: [0.6, 1, 0.6]

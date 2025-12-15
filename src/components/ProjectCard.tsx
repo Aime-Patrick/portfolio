@@ -119,9 +119,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
       )}
 
-      {/* Decorative corner elements */}
-      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-orange-500/10 to-transparent rounded-bl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-[var(--first-color)]/10 to-transparent rounded-tr-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
     </motion.article>
   );
 };
