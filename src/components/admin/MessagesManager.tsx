@@ -1,8 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { toast } from 'react-hot-toast';
-import { FaTrash, FaEnvelope, FaEnvelopeOpen, FaStar, FaRegStar } from 'react-icons/fa';
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
+import { toast } from "sonner";
+import {
+  Mail,
+  MailOpen,
+  Star,
+  Trash2,
+  Reply,
+} from "lucide-react";
+import { db } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface Message {
   id: string;
@@ -14,318 +52,263 @@ interface Message {
   starred: boolean;
 }
 
-const MessagesManager: React.FC = () => {
+type Filter = "all" | "unread" | "starred";
+
+export default function MessagesManager() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'starred'>('all');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
-    fetchMessages();
+    void fetchMessages();
   }, []);
 
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const messagesCollection = collection(db, 'messages');
-      const messagesSnapshot = await getDocs(messagesCollection);
-      const messagesList = messagesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate?.() || new Date(),
-        read: doc.data().read || false,
-        starred: doc.data().starred || false,
-      })) as Message[];
-      
-      // Sort by timestamp (newest first)
-      messagesList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-      
-      setMessages(messagesList);
+      const snap = await getDocs(collection(db, "messages"));
+      const list = snap.docs
+        .map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Message, "id" | "timestamp">),
+          timestamp: d.data().timestamp?.toDate?.() || new Date(),
+          read: Boolean(d.data().read),
+          starred: Boolean(d.data().starred),
+        }))
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      setMessages(list);
     } catch (error) {
-      console.error('Error fetching messages:', error);
-      toast.error('Failed to load messages');
+      console.error("Error fetching messages:", error);
+      toast.error("Failed to load messages");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteMessage = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this message?')) {
-      try {
-        await deleteDoc(doc(db, 'messages', id));
-        toast.success('Message deleted successfully');
-        
-        // Update local state
-        setMessages(prev => prev.filter(message => message.id !== id));
-        
-        // Clear selected message if it was deleted
-        if (selectedMessage?.id === id) {
-          setSelectedMessage(null);
-        }
-      } catch (error) {
-        console.error('Error deleting message:', error);
-        toast.error('Failed to delete message');
-      }
-    }
+  const selected = useMemo(
+    () => messages.find((m) => m.id === selectedId) || null,
+    [messages, selectedId]
+  );
+
+  const filtered = useMemo(() => {
+    if (filter === "unread") return messages.filter((m) => !m.read);
+    if (filter === "starred") return messages.filter((m) => m.starred);
+    return messages;
+  }, [messages, filter]);
+
+  const patchMessage = async (id: string, data: Partial<Message>) => {
+    await updateDoc(doc(db, "messages", id), data);
+    setMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, ...data } : m))
+    );
   };
 
-  const handleToggleRead = async (id: string, currentReadStatus: boolean) => {
-    try {
-      const messageRef = doc(db, 'messages', id);
-      await updateDoc(messageRef, { read: !currentReadStatus });
-      
-      // Update local state
-      setMessages(prev => 
-        prev.map(message => 
-          message.id === id ? { ...message, read: !currentReadStatus } : message
-        )
-      );
-      
-      // Update selected message if it was toggled
-      if (selectedMessage?.id === id) {
-        setSelectedMessage({ ...selectedMessage, read: !currentReadStatus });
-      }
-    } catch (error) {
-      console.error('Error updating message read status:', error);
-      toast.error('Failed to update message status');
-    }
-  };
-
-  const handleToggleStar = async (id: string, currentStarredStatus: boolean) => {
-    try {
-      const messageRef = doc(db, 'messages', id);
-      await updateDoc(messageRef, { starred: !currentStarredStatus });
-      
-      // Update local state
-      setMessages(prev => 
-        prev.map(message => 
-          message.id === id ? { ...message, starred: !currentStarredStatus } : message
-        )
-      );
-      
-      // Update selected message if it was toggled
-      if (selectedMessage?.id === id) {
-        setSelectedMessage({ ...selectedMessage, starred: !currentStarredStatus });
-      }
-    } catch (error) {
-      console.error('Error updating message starred status:', error);
-      toast.error('Failed to update message status');
-    }
-  };
-
-  const handleSelectMessage = async (message: Message) => {
-    setSelectedMessage(message);
-    
-    // Mark as read if it's unread
+  const selectMessage = async (message: Message) => {
+    setSelectedId(message.id);
     if (!message.read) {
-      await handleToggleRead(message.id, false);
+      try {
+        await patchMessage(message.id, { read: true });
+      } catch {
+        toast.error("Failed to mark as read");
+      }
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+  const formatDate = (date: Date) =>
+    new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(date);
-  };
-
-  const filteredMessages = messages.filter(message => {
-    if (filter === 'unread') return !message.read;
-    if (filter === 'starred') return message.starred;
-    return true;
-  });
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Header Card */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl p-6 text-white shadow-xl animate-slideUp">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-            <FaEnvelope className="text-2xl" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">Messages Manager</h2>
-            <p className="text-orange-100 text-sm">View and manage contact messages</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Messages List */}
-        <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl shadow-xl border-2 border-orange-500/30 lg:w-1/3 overflow-hidden flex flex-col animate-slideUp" style={{ animationDelay: '100ms' }}>
-          <div className="px-6 py-5 border-b border-orange-500/30 bg-black/50">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-              <FaEnvelope className="text-orange-400" />
-              Inbox ({filteredMessages.length})
-            </h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilter('all')}
-                className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${filter === 'all' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' : 'bg-black/50 text-gray-300 hover:bg-black/70 border border-orange-500/20'}`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilter('unread')}
-                className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${filter === 'unread' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' : 'bg-black/50 text-gray-300 hover:bg-black/70 border border-orange-500/20'}`}
-              >
-                Unread
-              </button>
-              <button
-                onClick={() => setFilter('starred')}
-                className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${filter === 'starred' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' : 'bg-black/50 text-gray-300 hover:bg-black/70 border border-orange-500/20'}`}
-              >
-                <FaStar className="inline mr-1" />
-                Starred
-              </button>
+    <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle>Inbox</CardTitle>
+          <CardDescription>{filtered.length} messages</CardDescription>
+          <Tabs
+            value={filter}
+            onValueChange={(v) => setFilter(v as Filter)}
+            className="pt-1"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="unread">Unread</TabsTrigger>
+              <TabsTrigger value="starred">Starred</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <Separator />
+        <CardContent className="max-h-[60vh] space-y-1 overflow-y-auto p-2">
+          {loading ? (
+            <div className="space-y-2 p-2">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
             </div>
-          </div>
-        
-          <div className="overflow-y-auto flex-1 p-4">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-gray-600 font-medium">Loading messages...</p>
-                </div>
-              </div>
-            ) : filteredMessages.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <FaEnvelope className="text-3xl text-gray-400" />
-                </div>
-                <p className="text-gray-500 text-lg font-medium">No messages</p>
-                <p className="text-gray-400 text-sm mt-2">Check back later for new messages</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {filteredMessages.map(message => (
-                  <div
-                    key={message.id}
-                    onClick={() => handleSelectMessage(message)}
-                    className={`group p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
-                      selectedMessage?.id === message.id 
-                        ? 'bg-orange-500/20 border-orange-500/60 shadow-lg' 
-                        : 'bg-black/30 border-orange-500/20 hover:border-orange-500/40 hover:bg-black/50'
-                    } ${!message.read ? 'font-semibold' : ''}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`mt-1 w-10 h-10 rounded-xl flex items-center justify-center ${
-                        message.read 
-                          ? 'bg-gray-700 text-gray-400' 
-                          : 'bg-gradient-to-br from-orange-500 to-red-500 text-white'
-                      }`}>
-                        {message.read ? <FaEnvelopeOpen /> : <FaEnvelope />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-bold text-white truncate">{message.name}</h4>
-                          {message.starred && <FaStar className="text-yellow-400 flex-shrink-0" />}
-                        </div>
-                        <p className="text-sm text-gray-400 truncate mb-1">{message.email}</p>
-                        <p className="text-sm text-gray-300 line-clamp-2">{message.message}</p>
-                        <span className="text-xs text-gray-500 mt-2 block">
-                          {formatDate(message.timestamp).split(',')[0]}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Message Detail */}
-        <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl shadow-xl border-2 border-orange-500/30 lg:w-2/3 overflow-hidden flex flex-col animate-slideUp" style={{ animationDelay: '200ms' }}>
-          {selectedMessage ? (
-            <>
-              <div className="px-6 py-5 border-b border-orange-500/30 bg-black/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                      {selectedMessage.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">{selectedMessage.name}</h3>
-                      <p className="text-sm text-gray-400">{selectedMessage.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleToggleStar(selectedMessage.id, selectedMessage.starred)}
-                      className="p-3 rounded-xl hover:bg-orange-500/20 transition-colors"
-                      aria-label={selectedMessage.starred ? 'Unstar message' : 'Star message'}
-                    >
-                      {selectedMessage.starred ? (
-                        <FaStar className="text-yellow-400 text-xl" />
-                      ) : (
-                        <FaRegStar className="text-gray-400 text-xl" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleToggleRead(selectedMessage.id, selectedMessage.read)}
-                      className="p-3 rounded-xl hover:bg-orange-500/20 transition-colors"
-                      aria-label={selectedMessage.read ? 'Mark as unread' : 'Mark as read'}
-                    >
-                      {selectedMessage.read ? (
-                        <FaEnvelopeOpen className="text-gray-400 text-xl" />
-                      ) : (
-                        <FaEnvelope className="text-orange-400 text-xl" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleDeleteMessage(selectedMessage.id)}
-                      className="p-3 rounded-xl hover:bg-red-500/20 text-red-400 transition-colors"
-                      aria-label="Delete message"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 border-b border-orange-500/20 bg-black/30">
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-300">Date:</span>
-                    <span className="text-gray-400">{formatDate(selectedMessage.timestamp)}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex-1 p-6 overflow-y-auto">
-                <div className="bg-black/50 p-6 rounded-2xl border-2 border-orange-500/20">
-                  <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{selectedMessage.message}</p>
-                </div>
-              </div>
-              
-              <div className="p-6 border-t border-orange-500/30 bg-black/30">
-                <a
-                  href={`mailto:${selectedMessage.email}`}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 hover:scale-[1.02] inline-flex items-center justify-center gap-2"
-                >
-                  <FaEnvelope />
-                  Reply via Email
-                </a>
-              </div>
-            </>
+          ) : filtered.length === 0 ? (
+            <p className="p-4 text-center text-sm text-muted-foreground">
+              No messages
+            </p>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 p-12">
-              <div className="w-24 h-24 bg-orange-500/20 rounded-full flex items-center justify-center mb-4">
-                <FaEnvelope className="text-5xl text-orange-400" />
-              </div>
-              <p className="text-lg font-medium text-gray-300">Select a message to view details</p>
-              <p className="text-sm text-gray-500 mt-2">Click on any message from the list</p>
-            </div>
+            filtered.map((message) => (
+              <button
+                key={message.id}
+                type="button"
+                onClick={() => void selectMessage(message)}
+                className={cn(
+                  "flex w-full gap-2 rounded-md border border-transparent p-2.5 text-left transition-colors hover:bg-accent",
+                  selectedId === message.id && "border-border bg-accent",
+                  !message.read && "font-medium"
+                )}
+              >
+                <div
+                  className={cn(
+                    "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md",
+                    message.read
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-primary text-primary-foreground"
+                  )}
+                >
+                  {message.read ? (
+                    <MailOpen className="size-3.5" />
+                  ) : (
+                    <Mail className="size-3.5" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1">
+                    <p className="truncate text-sm">{message.name}</p>
+                    {message.starred ? (
+                      <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" />
+                    ) : null}
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {message.email}
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                    {message.message}
+                  </p>
+                </div>
+              </button>
+            ))
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+
+      <Card className="min-h-[420px]">
+        {selected ? (
+          <>
+            <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
+              <div className="min-w-0">
+                <CardTitle className="truncate">{selected.name}</CardTitle>
+                <CardDescription className="truncate">
+                  {selected.email}
+                </CardDescription>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatDate(selected.timestamp)}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() =>
+                    void patchMessage(selected.id, {
+                      starred: !selected.starred,
+                    }).catch(() => toast.error("Failed to update"))
+                  }
+                  aria-label={selected.starred ? "Unstar" : "Star"}
+                >
+                  <Star
+                    className={cn(
+                      "size-4",
+                      selected.starred && "fill-amber-400 text-amber-400"
+                    )}
+                  />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() =>
+                    void patchMessage(selected.id, {
+                      read: !selected.read,
+                    }).catch(() => toast.error("Failed to update"))
+                  }
+                  aria-label={selected.read ? "Mark unread" : "Mark read"}
+                >
+                  {selected.read ? (
+                    <MailOpen className="size-4" />
+                  ) : (
+                    <Mail className="size-4" />
+                  )}
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="icon" variant="ghost" aria-label="Delete">
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="admin-shell">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete message?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={async () => {
+                          try {
+                            await deleteDoc(doc(db, "messages", selected.id));
+                            setMessages((prev) =>
+                              prev.filter((m) => m.id !== selected.id)
+                            );
+                            setSelectedId(null);
+                            toast.success("Message deleted");
+                          } catch {
+                            toast.error("Failed to delete");
+                          }
+                        }}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardHeader>
+            <Separator />
+            <CardContent className="space-y-4 pt-4">
+              {!selected.read ? (
+                <Badge variant="secondary">Unread</Badge>
+              ) : null}
+              <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                {selected.message}
+              </p>
+              <Button asChild>
+                <a href={`mailto:${selected.email}`}>
+                  <Reply className="size-3.5" />
+                  Reply via email
+                </a>
+              </Button>
+            </CardContent>
+          </>
+        ) : (
+          <CardContent className="flex h-full min-h-[420px] flex-col items-center justify-center gap-2 text-center">
+            <Mail className="size-8 text-muted-foreground" />
+            <p className="text-sm font-medium">Select a message</p>
+            <p className="text-xs text-muted-foreground">
+              Choose one from the inbox to read details
+            </p>
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
-};
-
-export default MessagesManager;
+}

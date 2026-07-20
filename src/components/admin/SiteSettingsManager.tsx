@@ -1,8 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { FaSave } from 'react-icons/fa';
-import toast from 'react-hot-toast';
+"use client";
+
+import { useEffect, useState } from "react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { toast } from "sonner";
+import { Save } from "lucide-react";
+import { db } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface SiteSettings {
   siteTitle: string;
@@ -14,265 +30,186 @@ interface SiteSettings {
   secondaryColor: string;
 }
 
-const SiteSettingsManager: React.FC = () => {
+const defaults: SiteSettings = {
+  siteTitle: "AimePatrick",
+  siteDescription: "Software Engineer Portfolio",
+  siteKeywords: "software engineer, web development, react, portfolio",
+  footerText: "© 2026 NDAGIJIMANA Aime Patrick. All rights reserved.",
+  enableChatbot: true,
+  primaryColor: "#f44a00",
+  secondaryColor: "#121212",
+};
+
+export default function SiteSettingsManager() {
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState<SiteSettings>({
-    siteTitle: '{{ NAP }}',
-    siteDescription: 'Software Engineer Portfolio',
-    siteKeywords: 'software engineer, web development, react, portfolio',
-    footerText: '© 2023 Aime Patrick Ndagijimana. All rights reserved.',
-    enableChatbot: true,
-    primaryColor: '#ff5d56',
-    secondaryColor: '#121212',
-  });
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState<SiteSettings>(defaults);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        setLoading(true);
-        const settingsDoc = doc(db, 'settings', 'site');
-        const settingsSnapshot = await getDoc(settingsDoc);
-        
-        if (settingsSnapshot.exists()) {
-          const data = settingsSnapshot.data() as SiteSettings;
-          setSettings(data);
+        const snap = await getDoc(doc(db, "settings", "site"));
+        if (snap.exists()) {
+          setSettings({ ...defaults, ...(snap.data() as SiteSettings) });
         }
       } catch (error) {
-        console.error('Error fetching site settings:', error);
-        toast.error('Failed to load site settings');
+        console.error("Error fetching site settings:", error);
+        toast.error("Failed to load site settings");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchSettings();
+    void fetchSettings();
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
-    
-    setSettings(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }));
+  const update = <K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
     try {
-      const settingsDoc = doc(db, 'settings', 'site');
-      await setDoc(settingsDoc, settings);
-      toast.success('Site settings updated successfully');
+      await setDoc(doc(db, "settings", "site"), settings);
+      toast.success("Settings saved");
     } catch (error) {
-      console.error('Error updating site settings:', error);
-      toast.error('Failed to update site settings');
+      console.error("Error updating site settings:", error);
+      toast.error("Failed to save settings");
+    } finally {
+      setSaving(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-400 font-medium">Loading settings...</p>
-        </div>
+      <div className="space-y-3">
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Header Card */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl p-6 text-white shadow-xl animate-slideUp">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
-            <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
-            </svg>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>SEO</CardTitle>
+          <CardDescription>Title, description, and keywords for search.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="siteTitle">Site title</Label>
+            <Input
+              id="siteTitle"
+              value={settings.siteTitle}
+              onChange={(e) => update("siteTitle", e.target.value)}
+              required
+            />
           </div>
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold">Site Settings</h2>
-            <p className="text-gray-300 text-sm mt-1">Configure your portfolio site preferences</p>
+          <div className="space-y-2">
+            <Label htmlFor="siteDescription">Description</Label>
+            <Input
+              id="siteDescription"
+              value={settings.siteDescription}
+              onChange={(e) => update("siteDescription", e.target.value)}
+              required
+            />
           </div>
-        </div>
-      </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="siteKeywords">Keywords</Label>
+            <Input
+              id="siteKeywords"
+              value={settings.siteKeywords}
+              onChange={(e) => update("siteKeywords", e.target.value)}
+              placeholder="developer, portfolio, react"
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="footerText">Footer text</Label>
+            <Input
+              id="footerText"
+              value={settings.footerText}
+              onChange={(e) => update("footerText", e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl shadow-xl border-2 border-orange-500/30 p-8 animate-slideUp" style={{ animationDelay: '100ms' }}>
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* SEO Section */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 pb-4 border-b border-orange-500/30">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
-                </svg>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-white">SEO Settings</h4>
-                <p className="text-sm text-gray-400">Configure meta information</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="font-medium text-gray-300 text-sm">Site Title</label>
-                <input
-                  type="text"
-                  name="siteTitle"
-                  value={settings.siteTitle}
-                  onChange={handleInputChange}
-                  className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  placeholder="Your portfolio title"
-                  required
-                />
-              </div>
-              
-              <div className="flex flex-col gap-2">
-                <label className="font-medium text-gray-300 text-sm">Site Description</label>
-                <input
-                  type="text"
-                  name="siteDescription"
-                  value={settings.siteDescription}
-                  onChange={handleInputChange}
-                  className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  placeholder="Brief site description"
-                  required
-                />
-              </div>
-              
-              <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="font-medium text-gray-300 text-sm">Site Keywords</label>
-                <input
-                  type="text"
-                  name="siteKeywords"
-                  value={settings.siteKeywords}
-                  onChange={handleInputChange}
-                  className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  placeholder="Comma separated keywords"
-                />
-                <p className="text-xs text-gray-500">Separate keywords with commas (e.g., developer, portfolio, react)</p>
-              </div>
-              
-              <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="font-medium text-gray-300 text-sm">Footer Text</label>
-                <input
-                  type="text"
-                  name="footerText"
-                  value={settings.footerText}
-                  onChange={handleInputChange}
-                  className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  placeholder="© 2024 Your Name. All rights reserved."
-                />
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Brand color</CardTitle>
+          <CardDescription>
+            Primary accent used on the public portfolio.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="primaryColor">Primary</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="primaryColorPicker"
+                type="color"
+                value={settings.primaryColor}
+                onChange={(e) => update("primaryColor", e.target.value)}
+                className="h-9 w-12 cursor-pointer p-1"
+              />
+              <Input
+                id="primaryColor"
+                value={settings.primaryColor}
+                onChange={(e) => update("primaryColor", e.target.value)}
+              />
             </div>
           </div>
-
-
-          {/* Appearance Section */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 pb-4 border-b border-orange-500/30">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd"/>
-                </svg>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-white">Theme Colors</h4>
-                <p className="text-sm text-gray-400">Customize your brand colors</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex flex-col gap-2">
-                <label className="font-medium text-gray-300 text-sm">Primary Color</label>
-                <div className="flex items-center gap-3 p-4 bg-black/30 rounded-xl border-2 border-orange-500/30">
-                  <input
-                    type="color"
-                    name="primaryColor"
-                    value={settings.primaryColor}
-                    onChange={handleInputChange}
-                    className="w-16 h-16 rounded-lg border-2 border-orange-500/30 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    name="primaryColor"
-                    value={settings.primaryColor}
-                    onChange={handleInputChange}
-                    className="bg-black/50 border-2 border-orange-500/30 rounded-lg p-2 flex-1 text-white"
-                    placeholder="#ff5d56"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex flex-col gap-2">
-                <label className="font-medium text-gray-300 text-sm">Secondary Color</label>
-                <div className="flex items-center gap-3 p-4 bg-black/30 rounded-xl border-2 border-orange-500/30">
-                  <input
-                    type="color"
-                    name="secondaryColor"
-                    value={settings.secondaryColor}
-                    onChange={handleInputChange}
-                    className="w-16 h-16 rounded-lg border-2 border-orange-500/30 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    name="secondaryColor"
-                    value={settings.secondaryColor}
-                    onChange={handleInputChange}
-                    className="bg-black/50 border-2 border-orange-500/30 rounded-lg p-2 flex-1 text-white"
-                    placeholder="#121212"
-                  />
-                </div>
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="secondaryColor">Secondary</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="secondaryColorPicker"
+                type="color"
+                value={settings.secondaryColor}
+                onChange={(e) => update("secondaryColor", e.target.value)}
+                className="h-9 w-12 cursor-pointer p-1"
+              />
+              <Input
+                id="secondaryColor"
+                value={settings.secondaryColor}
+                onChange={(e) => update("secondaryColor", e.target.value)}
+              />
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Features Section */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 pb-4 border-b border-orange-500/30">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z"/>
-                </svg>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold text-white">Features</h4>
-                <p className="text-sm text-gray-400">Enable or disable site features</p>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Features</CardTitle>
+          <CardDescription>Toggle public site features.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
+            <div>
+              <Label htmlFor="enableChatbot" className="text-sm font-medium">
+                Portfolio assistant
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Show the AI chat button on the public site.
+              </p>
             </div>
-
-            <div className="p-6 bg-black/30 rounded-xl border-2 border-orange-500/30">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="enableChatbot"
-                  id="enableChatbot"
-                  checked={settings.enableChatbot}
-                  onChange={handleInputChange}
-                  className="w-6 h-6 rounded-lg border-2 border-orange-500/30 text-orange-500 focus:ring-2 focus:ring-orange-500/20 bg-black/50"
-                />
-                <div className="flex-1">
-                  <span className="font-semibold text-white block">Enable AI Chatbot</span>
-                  <span className="text-sm text-gray-400">Allow visitors to interact with your AI assistant</span>
-                </div>
-              </label>
-            </div>
+            <Switch
+              id="enableChatbot"
+              checked={settings.enableChatbot}
+              onCheckedChange={(checked) => update("enableChatbot", checked)}
+            />
           </div>
-        
-          <div className="pt-6 border-t border-orange-500/30">
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2"
-            >
-              <FaSave className="text-xl" />
-              Save All Settings
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </CardContent>
+        <Separator />
+        <CardFooter className="justify-end pt-4">
+          <Button type="submit" disabled={saving}>
+            <Save className="size-3.5" />
+            {saving ? "Saving…" : "Save settings"}
+          </Button>
+        </CardFooter>
+      </Card>
+    </form>
   );
-};
-
-export default SiteSettingsManager;
+}

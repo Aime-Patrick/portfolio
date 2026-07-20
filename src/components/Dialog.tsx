@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
-import { IoClose } from 'react-icons/io5';
+"use client";
+
+import React, { useEffect } from "react";
+import { IoClose } from "react-icons/io5";
 
 interface DialogProps {
   isOpen: boolean;
@@ -11,29 +13,29 @@ interface DialogProps {
 const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children }) => {
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
 
     if (isOpen) {
-      window.addEventListener('keydown', handleEscape);
+      window.addEventListener("keydown", handleEscape);
     }
 
     return () => {
-      window.removeEventListener('keydown', handleEscape);
+      window.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen, onClose]);
 
@@ -48,28 +50,29 @@ const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children }) => 
         }
       }}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      
-      {/* Dialog */}
       <div
-        className="relative bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl shadow-2xl border-2 border-orange-500/30 max-w-2xl w-full max-h-[90vh] overflow-hidden animate-slideUp"
+        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <div
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--container-color)] shadow-2xl animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 bg-gradient-to-r from-orange-500/20 to-red-500/20 border-b border-orange-500/30">
-          <h2 className="text-2xl font-bold text-white">{title}</h2>
+        <div className="flex items-center justify-between gap-4 border-b border-[var(--border-color)] px-6 py-4">
+          <h2 className="text-xl font-bold text-[var(--title-color)] sm:text-2xl">
+            {title}
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-orange-500/20 text-gray-300 hover:text-white transition-colors"
+            className="rounded-lg p-2 text-[var(--text-color)] transition-colors hover:bg-[var(--body-color)] hover:text-[var(--title-color)]"
             aria-label="Close dialog"
           >
-            <IoClose className="w-6 h-6" />
+            <IoClose className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="max-h-[calc(90vh-80px)] overflow-y-auto p-6">
           {children}
         </div>
       </div>
@@ -78,4 +81,3 @@ const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children }) => 
 };
 
 export default Dialog;
-

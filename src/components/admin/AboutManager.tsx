@@ -1,13 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { toast } from 'react-hot-toast';
-import { FaUser, FaGraduationCap, FaBriefcase, FaCode, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
-import ConfirmationDialog from '../ConfirmationDialog';
+"use client";
 
-// Cloudinary configuration
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+import { useEffect, useRef, useState } from "react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { toast } from "sonner";
+import {
+  Briefcase,
+  Code2,
+  GraduationCap,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+  User,
+  Loader2,
+} from "lucide-react";
+import { db } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 interface Experience {
   id?: string;
@@ -32,93 +74,112 @@ interface AboutData {
   cloudinaryPublicId?: string;
 }
 
-const AboutManager: React.FC = () => {
+const emptyExperience: Experience = {
+  title: "",
+  description: "",
+  shortDescription: "",
+  company: "",
+  location: "",
+  startDate: "",
+  endDate: "",
+  isCurrent: false,
+};
+
+export default function AboutManager() {
   const [aboutData, setAboutData] = useState<AboutData>({
-    name: '',
-    title: '',
-    bio: '',
+    name: "",
+    title: "",
+    bio: "",
     experience: [],
-    education: '',
+    education: "",
     skills: [],
-    image: '',
+    image: "",
   });
-  const [skillInput, setSkillInput] = useState('');
+  const [skillInput, setSkillInput] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
-  const [imageInputRef, setImageInputRef] = useState<HTMLInputElement | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
-  // Experience form state
   const [showExperienceForm, setShowExperienceForm] = useState(false);
-  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
-  const [experienceForm, setExperienceForm] = useState<Experience>({
-    title: '',
-    description: '',
-    shortDescription: '',
-    company: '',
-    location: '',
-    startDate: '',
-    endDate: '',
-    isCurrent: false,
-  });
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(
+    null
+  );
+  const [experienceForm, setExperienceForm] =
+    useState<Experience>(emptyExperience);
+  const [accordionValue, setAccordionValue] = useState<string[]>([
+    "basics",
+    "experience",
+    "education",
+    "skills",
+    "image",
+  ]);
 
   useEffect(() => {
-    fetchAboutData();
+    void fetchAboutData();
   }, []);
 
   const fetchAboutData = async () => {
     try {
       setLoading(true);
-      const aboutDoc = doc(db, 'about', 'main');
+      const aboutDoc = doc(db, "about", "main");
       const aboutSnapshot = await getDoc(aboutDoc);
-      
+
       if (aboutSnapshot.exists()) {
-        const data = aboutSnapshot.data() as any;
-        // Handle backward compatibility: convert string experience to array
+        const data = aboutSnapshot.data() as AboutData & {
+          experience?: Experience[] | string;
+        };
         let experiences: Experience[] = [];
         if (Array.isArray(data.experience)) {
           experiences = data.experience;
-        } else if (typeof data.experience === 'string' && data.experience.trim()) {
-          // Convert old string format to array
-          experiences = [{
-            title: 'Experience',
-            description: data.experience,
-            shortDescription: data.experience.substring(0, 100) + '...',
-          }];
+        } else if (
+          typeof data.experience === "string" &&
+          data.experience.trim()
+        ) {
+          experiences = [
+            {
+              title: "Experience",
+              description: data.experience,
+              shortDescription: data.experience.substring(0, 100) + "...",
+            },
+          ];
         }
-        
+
         setAboutData({
           ...data,
           experience: experiences,
+          skills: data.skills || [],
         });
-        setImagePreview(data.image || '');
+        setImagePreview(data.image || "");
       }
     } catch (error) {
-      console.error('Error fetching about data:', error);
-      toast.error('Failed to load about data');
+      console.error("Error fetching about data:", error);
+      toast.error("Failed to load about data");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setAboutData(prev => ({ ...prev, [name]: value }));
+    setAboutData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const maxSize = 20 * 1024 * 1024; // 20 MB
-      
+      const maxSize = 20 * 1024 * 1024;
+
       if (file.size > maxSize) {
-        toast.error(`File size too large. Maximum size is 20 MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-        e.target.value = ''; // Clear the input
+        toast.error(
+          `File size too large. Maximum size is 20 MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB`
+        );
+        e.target.value = "";
         return;
       }
-      
+
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -126,88 +187,72 @@ const AboutManager: React.FC = () => {
 
   const handleDeleteImage = () => {
     setImageFile(null);
-    setImagePreview('');
-    setAboutData(prev => {
-      const { cloudinaryPublicId, ...rest } = prev;
-      return {
-        ...rest,
-        image: '',
-      };
+    setImagePreview("");
+    setAboutData((prev) => {
+      const { cloudinaryPublicId: _, ...rest } = prev;
+      return { ...rest, image: "" };
     });
-    toast.success('Image removed!');
+    toast.success("Image removed!");
   };
 
   const addSkill = () => {
     if (skillInput.trim() && !aboutData.skills.includes(skillInput.trim())) {
-      setAboutData(prev => ({
+      setAboutData((prev) => ({
         ...prev,
         skills: [...prev.skills, skillInput.trim()],
       }));
-      setSkillInput('');
+      setSkillInput("");
     }
   };
 
   const removeSkill = (skill: string) => {
-    setAboutData(prev => ({
+    setAboutData((prev) => ({
       ...prev,
-      skills: prev.skills.filter(s => s !== skill),
+      skills: prev.skills.filter((s) => s !== skill),
     }));
   };
 
-  // Experience management functions
   const resetExperienceForm = () => {
-    setExperienceForm({
-      title: '',
-      description: '',
-      shortDescription: '',
-      company: '',
-      location: '',
-      startDate: '',
-      endDate: '',
-      isCurrent: false,
-    });
+    setExperienceForm(emptyExperience);
     setEditingExperience(null);
     setShowExperienceForm(false);
   };
 
-  const handleExperienceFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setExperienceForm(prev => ({ ...prev, [name]: checked }));
-    } else {
-      setExperienceForm(prev => ({ ...prev, [name]: value }));
-    }
+  const handleExperienceFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setExperienceForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddExperience = () => {
     if (!experienceForm.title.trim() || !experienceForm.description.trim()) {
-      toast.error('Title and description are required');
+      toast.error("Title and description are required");
       return;
     }
 
     const newExperience: Experience = {
       ...experienceForm,
       id: editingExperience?.id || `exp-${Date.now()}`,
-      shortDescription: experienceForm.shortDescription || experienceForm.description.substring(0, 100) + '...',
+      shortDescription:
+        experienceForm.shortDescription ||
+        experienceForm.description.substring(0, 100) + "...",
     };
 
     if (editingExperience) {
-      // Update existing experience
-      setAboutData(prev => ({
+      setAboutData((prev) => ({
         ...prev,
-        experience: prev.experience.map(exp => 
+        experience: prev.experience.map((exp) =>
           exp.id === editingExperience.id ? newExperience : exp
         ),
       }));
-      toast.success('Experience updated!');
+      toast.success("Experience updated!");
     } else {
-      // Add new experience
-      setAboutData(prev => ({
+      setAboutData((prev) => ({
         ...prev,
         experience: [...prev.experience, newExperience],
       }));
-      toast.success('Experience added!');
+      toast.success("Experience added!");
     }
 
     resetExperienceForm();
@@ -217,80 +262,80 @@ const AboutManager: React.FC = () => {
     setExperienceForm(exp);
     setEditingExperience(exp);
     setShowExperienceForm(true);
+    setAccordionValue((prev) =>
+      prev.includes("experience") ? prev : [...prev, "experience"]
+    );
   };
 
   const handleRemoveExperience = (expId: string | undefined) => {
     if (!expId) return;
-    setAboutData(prev => ({
+    setAboutData((prev) => ({
       ...prev,
-      experience: prev.experience.filter(exp => exp.id !== expId),
+      experience: prev.experience.filter((exp) => exp.id !== expId),
     }));
-    toast.success('Experience removed!');
+    toast.success("Experience removed!");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      toast.error('Cloudinary is not configured');
+      toast.error("Cloudinary is not configured");
       return;
     }
-    
+
     try {
       setSaving(true);
       let imageUrl = aboutData.image;
       let cloudinaryPublicId = aboutData.cloudinaryPublicId;
 
-      // Upload image if new file selected
       if (imageFile) {
-        toast.loading('Uploading image...');
-        
+        toast.loading("Uploading image...");
+
         const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', UPLOAD_PRESET);
-        formData.append('folder', 'portfolio/about');
-        formData.append('max_file_size', '20971520'); // 20 MB in bytes
+        formData.append("file", imageFile);
+        formData.append("upload_preset", UPLOAD_PRESET);
+        formData.append("folder", "portfolio/about");
+        formData.append("max_file_size", "20971520");
 
         const response = await fetch(
           `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-          {
-            method: 'POST',
-            body: formData,
-          }
+          { method: "POST", body: formData }
         );
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData?.error?.message || 'Failed to upload image';
+          const errorMessage =
+            (errorData as { error?: { message?: string } })?.error?.message ||
+            "Failed to upload image";
           throw new Error(errorMessage);
         }
 
         const data = await response.json();
         imageUrl = data.secure_url;
         cloudinaryPublicId = data.public_id;
-        
+
         toast.dismiss();
-        toast.success('Image uploaded!');
+        toast.success("Image uploaded!");
       }
 
-      // Save to Firestore
-      const aboutDoc = doc(db, 'about', 'main');
-      const dataToSave: any = {
+      const aboutDoc = doc(db, "about", "main");
+      const dataToSave: Record<string, unknown> = {
         ...aboutData,
         image: imageUrl,
       };
-      // Only include cloudinaryPublicId if it has a value
       if (cloudinaryPublicId) {
         dataToSave.cloudinaryPublicId = cloudinaryPublicId;
       }
       await setDoc(aboutDoc, dataToSave);
 
-      toast.success('About section updated successfully!');
+      toast.success("About section updated successfully!");
       setImageFile(null);
-    } catch (error: any) {
-      console.error('Error saving about data:', error);
+    } catch (error: unknown) {
+      console.error("Error saving about data:", error);
       toast.dismiss();
-      const errorMessage = error?.message || 'Failed to save about data';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save about data";
       toast.error(errorMessage);
     } finally {
       setSaving(false);
@@ -299,406 +344,498 @@ const AboutManager: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-400 font-medium">Loading about data...</p>
-        </div>
+      <div className="space-y-3">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+        <Skeleton className="h-32 w-full rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Card */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl p-6 text-white shadow-xl animate-slideUp">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
-            <FaUser className="text-2xl" />
-          </div>
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold">Manage About Me</h2>
-            <p className="text-gray-300 text-sm mt-1">Update your personal information and bio</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Card */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 p-8 rounded-2xl shadow-xl border-2 border-orange-500/30 animate-slideUp" style={{ animationDelay: '100ms' }}>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-                <FaUser className="text-orange-400" />
-                Full Name *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={aboutData.name}
-                onChange={handleInputChange}
-                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                placeholder="e.g., NDAGIJIMANA Aime Patrick"
-                required
-              />
+    <form onSubmit={handleSubmit}>
+      <Accordion
+        type="multiple"
+        value={accordionValue}
+        onValueChange={setAccordionValue}
+        className="w-full"
+      >
+        <AccordionItem value="basics" className="border-b">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="text-left">
+              <p className="font-medium">Basic Information</p>
+              <p className="text-xs font-normal text-muted-foreground">
+                Name, title, and introduction
+              </p>
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-                <FaBriefcase className="text-orange-400" />
-                Professional Title *
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={aboutData.title}
-                onChange={handleInputChange}
-                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                placeholder="e.g., Full Stack Developer"
-                required
-              />
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-6 pt-1">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="flex items-center gap-2">
+                    <User className="size-3.5" />
+                    Full Name
+                  </Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={aboutData.name}
+                    onChange={handleInputChange}
+                    placeholder="e.g., NDAGIJIMANA Aime Patrick"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="flex items-center gap-2">
+                    <Briefcase className="size-3.5" />
+                    Professional Title
+                  </Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    value={aboutData.title}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Full Stack Developer"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio / Introduction</Label>
+                <Textarea
+                  id="bio"
+                  name="bio"
+                  value={aboutData.bio}
+                  onChange={handleInputChange}
+                  className="min-h-28"
+                  placeholder="Tell visitors about yourself..."
+                  required
+                />
+              </div>
             </div>
-          </div>
+          </AccordionContent>
+        </AccordionItem>
 
-          {/* Bio */}
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm">Bio / Introduction *</label>
-            <textarea
-              name="bio"
-              value={aboutData.bio}
-              onChange={handleInputChange}
-              className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[120px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-              placeholder="Tell visitors about yourself, your passion, and what drives you..."
-              required
-            />
-          </div>
-
-          {/* Experience Section */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-                <FaBriefcase className="text-orange-400" />
-                Experience
-              </label>
-              <button
-                type="button"
-                onClick={() => {
-                  resetExperienceForm();
-                  setShowExperienceForm(true);
-                }}
-                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-semibold rounded-lg hover:shadow-lg hover:from-orange-600 hover:to-red-600 transition-all flex items-center gap-2"
-              >
-                <FaPlus className="text-xs" />
-                Add Experience
-              </button>
+        <AccordionItem value="experience" className="border-b">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2 text-left">
+              <span className="font-medium">Experience</span>
+              <Badge variant="secondary">{aboutData.experience.length}</Badge>
             </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4 pt-1">
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    resetExperienceForm();
+                    setShowExperienceForm(true);
+                  }}
+                >
+                  <Plus className="size-4" />
+                  Add Experience
+                </Button>
+              </div>
 
-            {/* Experience Form Dialog */}
-            {showExperienceForm && (
-              <div className="p-6 bg-black/30 rounded-xl border-2 border-orange-500/30">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  {editingExperience ? 'Edit Experience' : 'Add New Experience'}
-                </h3>
-                
-                <div className="flex flex-col gap-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-gray-300 text-sm">Job Title *</label>
-                      <input
-                        type="text"
+              {showExperienceForm && (
+                <div className="space-y-4 rounded-lg border p-4">
+                  <p className="text-sm font-medium">
+                    {editingExperience ? "Edit Experience" : "Add Experience"}
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="exp-title">Job Title</Label>
+                      <Input
+                        id="exp-title"
                         name="title"
                         value={experienceForm.title}
                         onChange={handleExperienceFormChange}
-                        className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                         placeholder="e.g., Full Stack Developer"
                         required
                       />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-gray-300 text-sm">Company</label>
-                      <input
-                        type="text"
+                    <div className="space-y-2">
+                      <Label htmlFor="exp-company">Company</Label>
+                      <Input
+                        id="exp-company"
                         name="company"
                         value={experienceForm.company}
                         onChange={handleExperienceFormChange}
-                        className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                         placeholder="Company name"
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-gray-300 text-sm">Start Date</label>
-                      <input
-                        type="text"
+                    <div className="space-y-2">
+                      <Label htmlFor="exp-start">Start Date</Label>
+                      <Input
+                        id="exp-start"
                         name="startDate"
                         value={experienceForm.startDate}
                         onChange={handleExperienceFormChange}
-                        className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                         placeholder="e.g., Jan 2020"
                       />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-gray-300 text-sm">End Date</label>
-                      <input
-                        type="text"
+                    <div className="space-y-2">
+                      <Label htmlFor="exp-end">End Date</Label>
+                      <Input
+                        id="exp-end"
                         name="endDate"
                         value={experienceForm.endDate}
                         onChange={handleExperienceFormChange}
                         disabled={experienceForm.isCurrent}
-                        className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all disabled:opacity-50"
-                        placeholder={experienceForm.isCurrent ? "Current" : "e.g., Dec 2023"}
+                        placeholder={
+                          experienceForm.isCurrent ? "Current" : "e.g., Dec 2023"
+                        }
                       />
                     </div>
                   </div>
-
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="isCurrent"
-                      checked={experienceForm.isCurrent}
-                      onChange={handleExperienceFormChange}
-                      className="w-4 h-4 rounded border-orange-500 text-orange-500 focus:ring-orange-500"
+                    <Checkbox
+                      id="isCurrent"
+                      checked={!!experienceForm.isCurrent}
+                      onCheckedChange={(checked) =>
+                        setExperienceForm((prev) => ({
+                          ...prev,
+                          isCurrent: checked === true,
+                          endDate: checked === true ? "" : prev.endDate,
+                        }))
+                      }
                     />
-                    <label className="text-gray-300 text-sm">Current Position</label>
+                    <Label htmlFor="isCurrent">Current position</Label>
                   </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-gray-300 text-sm">Location</label>
-                    <input
-                      type="text"
+                  <div className="space-y-2">
+                    <Label htmlFor="exp-location">Location</Label>
+                    <Input
+                      id="exp-location"
                       name="location"
                       value={experienceForm.location}
                       onChange={handleExperienceFormChange}
-                      className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                       placeholder="e.g., Remote, Kigali, Rwanda"
                     />
                   </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-gray-300 text-sm">Short Description (for card preview)</label>
-                    <textarea
+                  <div className="space-y-2">
+                    <Label htmlFor="exp-short">Short Description</Label>
+                    <Textarea
+                      id="exp-short"
                       name="shortDescription"
                       value={experienceForm.shortDescription}
                       onChange={handleExperienceFormChange}
-                      className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[60px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                      placeholder="Brief description shown on card (optional, auto-generated if empty)"
+                      className="min-h-16"
+                      placeholder="Brief card preview (optional)"
                     />
                   </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-gray-300 text-sm">Full Description *</label>
-                    <textarea
+                  <div className="space-y-2">
+                    <Label htmlFor="exp-desc">Full Description</Label>
+                    <Textarea
+                      id="exp-desc"
                       name="description"
                       value={experienceForm.description}
                       onChange={handleExperienceFormChange}
-                      className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[120px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                      placeholder="Detailed description shown in dialog..."
+                      className="min-h-28"
+                      placeholder="Detailed description..."
                       required
                     />
                   </div>
-
-                  <div className="flex gap-2 justify-end">
-                    <button
+                  <div className="flex gap-2">
+                    <Button
                       type="button"
+                      className="flex-1"
+                      onClick={handleAddExperience}
+                    >
+                      {editingExperience ? (
+                        <>
+                          <Pencil className="size-4" />
+                          Update Experience
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="size-4" />
+                          Add Experience
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
                       onClick={resetExperienceForm}
-                      className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-all"
                     >
                       Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAddExperience}
-                      className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all"
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {aboutData.experience.length === 0 && !showExperienceForm ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <Briefcase className="mb-3 size-10 text-muted-foreground" />
+                  <p className="font-medium text-muted-foreground">
+                    No experience yet
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Add roles and work history above
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {aboutData.experience.map((exp, index) => (
+                    <Card
+                      key={exp.id || index}
+                      className="gap-0 overflow-hidden py-0 shadow-none"
                     >
-                      {editingExperience ? 'Update' : 'Add'} Experience
-                    </button>
-                  </div>
+                      <CardHeader className="gap-1.5 px-4 py-3">
+                        {exp.company ? (
+                          <Badge
+                            variant="outline"
+                            className="max-w-full truncate font-normal"
+                          >
+                            {exp.company}
+                          </Badge>
+                        ) : null}
+                        <CardTitle className="line-clamp-2 text-base leading-snug">
+                          {exp.title}
+                        </CardTitle>
+                        {(exp.startDate || exp.endDate || exp.isCurrent) && (
+                          <p className="text-xs text-muted-foreground">
+                            {exp.startDate || "N/A"}
+                            {exp.isCurrent
+                              ? " – Present"
+                              : exp.endDate
+                                ? ` – ${exp.endDate}`
+                                : ""}
+                          </p>
+                        )}
+                        <CardDescription className="line-clamp-3 text-xs leading-relaxed">
+                          {exp.shortDescription ||
+                            exp.description.substring(0, 100) + "..."}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardFooter className="gap-2 border-t px-4 py-3 [.border-t]:pt-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleEditExperience(exp)}
+                        >
+                          <Pencil className="size-3.5" />
+                          Edit
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="size-3.5" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent size="sm">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Remove experience?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Remove this experience entry? Remember to save
+                                About Me afterward.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                variant="destructive"
+                                onClick={() =>
+                                  handleRemoveExperience(exp.id)
+                                }
+                              >
+                                Remove
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </CardFooter>
+                    </Card>
+                  ))}
                 </div>
-              </div>
-            )}
-
-            {/* Experience Cards List */}
-            {aboutData.experience.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                {aboutData.experience.map((exp, index) => (
-                  <div
-                    key={exp.id || index}
-                    className="relative p-4 bg-gradient-to-br from-gray-900/50 via-black/50 to-gray-900/50 border-2 border-orange-500/30 rounded-xl shadow-lg hover:shadow-xl hover:border-orange-500/60 transition-all duration-300"
-                  >
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <h4 className="text-orange-400 font-bold text-lg">{exp.title}</h4>
-                          {exp.company && (
-                            <p className="text-gray-300 text-sm mt-1">{exp.company}</p>
-                          )}
-                          {(exp.startDate || exp.endDate) && (
-                            <p className="text-xs text-gray-400 mt-1">
-                              {exp.startDate || 'N/A'}
-                              {exp.isCurrent ? ' - Present' : exp.endDate ? ` - ${exp.endDate}` : ''}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleEditExperience(exp)}
-                            className="p-2 bg-orange-500/30 rounded-lg hover:bg-orange-500/50 text-orange-300 hover:text-white transition-all"
-                            aria-label="Edit experience"
-                          >
-                            <FaEdit className="text-sm" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveExperience(exp.id)}
-                            className="p-2 bg-red-500/30 rounded-lg hover:bg-red-500/50 text-red-300 hover:text-white transition-all"
-                            aria-label="Remove experience"
-                          >
-                            <FaTrash className="text-sm" />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-400 line-clamp-2 mt-2">
-                        {exp.shortDescription || exp.description.substring(0, 100) + '...'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Education */}
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-              <FaGraduationCap className="text-orange-400" />
-              Education *
-            </label>
-            <textarea
-              name="education"
-              value={aboutData.education}
-              onChange={handleInputChange}
-              className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[100px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-              placeholder="List your educational background, degrees, and institutions..."
-              required
-            />
-          </div>
-
-          {/* Skills */}
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-              <FaCode className="text-orange-400" />
-              Skills
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                className="flex-1 bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                placeholder="Add a skill (e.g., React, TypeScript, Node.js)"
-              />
-              <button
-                type="button"
-                onClick={addSkill}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold hover:shadow-lg hover:from-orange-600 hover:to-red-600 transition-all"
-              >
-                Add
-              </button>
+              )}
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {aboutData.skills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/20 text-orange-400 rounded-full text-sm font-medium border border-orange-500/30"
-                >
-                  {skill}
-                  <button
-                    type="button"
-                    onClick={() => removeSkill(skill)}
-                    className="text-red-400 hover:text-red-300 font-bold text-lg leading-none"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
+          </AccordionContent>
+        </AccordionItem>
 
-          {/* Profile Image */}
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm">Profile Image</label>
-            <div className="relative">
-              <input
-                ref={(input) => setImageInputRef(input)}
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-gray-300 border-2 border-orange-500/30 rounded-xl cursor-pointer bg-black/50 focus:outline-none file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-orange-500 file:to-red-500 file:text-white hover:file:from-orange-600 hover:file:to-red-600 file:transition-all"
+        <AccordionItem value="education" className="border-b">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="text-left">
+              <p className="font-medium flex items-center gap-2">
+                <GraduationCap className="size-4" />
+                Education
+              </p>
+              <p className="text-xs font-normal text-muted-foreground">
+                Degrees and institutions
+              </p>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-2 pt-1">
+              <Label htmlFor="education">Education Background</Label>
+              <Textarea
+                id="education"
+                name="education"
+                value={aboutData.education}
+                onChange={handleInputChange}
+                className="min-h-24"
+                placeholder="List degrees and institutions..."
+                required
               />
             </div>
-            {(imagePreview || aboutData.image) && (
-              <div className="mt-4 p-4 bg-black/30 rounded-xl border border-orange-500/20 relative group">
-                <img
-                  src={imagePreview || aboutData.image}
-                  alt="Profile preview"
-                  onClick={() => imageInputRef?.click()}
-                  className="w-40 h-40 rounded-2xl object-cover shadow-lg border-4 border-orange-500/30 cursor-pointer hover:border-orange-500 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDeleteConfirm(true);
-                  }}
-                  className="absolute top-6 right-6 p-2 bg-red-500/90 hover:bg-red-600 text-white rounded-lg shadow-lg transition-all hover:scale-110 opacity-0 group-hover:opacity-100"
-                  aria-label="Delete image"
-                >
-                  <FaTrash className="text-sm" />
-                </button>
-                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/70 px-3 py-1 rounded-lg text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  Click image to change
-                </div>
-              </div>
-            )}
-          </div>
+          </AccordionContent>
+        </AccordionItem>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
-          >
-            {saving ? (
-              <span className="flex items-center justify-center gap-3">
-                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                Saving...
+        <AccordionItem value="skills" className="border-b">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2 text-left">
+              <span className="font-medium flex items-center gap-2">
+                <Code2 className="size-4" />
+                Skills
               </span>
-            ) : (
-              'Save About Me'
-            )}
-          </button>
-        </form>
-      </div>
+              <Badge variant="secondary">{aboutData.skills.length}</Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4 pt-1">
+              <div className="flex gap-2">
+                <Input
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addSkill();
+                    }
+                  }}
+                  placeholder="Add a skill (e.g., React, TypeScript)"
+                />
+                <Button type="button" variant="secondary" onClick={addSkill}>
+                  <Plus className="size-4" />
+                  Add
+                </Button>
+              </div>
+              {aboutData.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {aboutData.skills.map((skill) => (
+                    <Badge key={skill} variant="secondary" className="gap-1 pr-1">
+                      {skill}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-5"
+                        onClick={() => removeSkill(skill)}
+                        aria-label={`Remove ${skill}`}
+                      >
+                        <Trash2 className="size-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No skills added yet
+                </p>
+              )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Delete Image Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDeleteImage}
-        title="Delete Image"
-        message="Are you sure you want to delete the current image? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-      />
-    </div>
+        <AccordionItem value="image" className="border-b-0">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="text-left">
+              <p className="font-medium">Profile Image</p>
+              <p className="text-xs font-normal text-muted-foreground">
+                Upload an image (max 20 MB)
+              </p>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-6 pt-1">
+              <div className="space-y-2">
+                <Label htmlFor="about-image">Image File</Label>
+                <Input
+                  ref={imageInputRef}
+                  id="about-image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </div>
+              {(imagePreview || aboutData.image) && (
+                <div className="relative inline-block overflow-hidden rounded-md border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imagePreview || aboutData.image}
+                    alt="Profile preview"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="max-h-48 cursor-pointer object-cover"
+                  />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 size-8"
+                        aria-label="Delete image"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent size="sm">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete image?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete the current image?
+                          Remember to save About Me afterward.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          variant="destructive"
+                          onClick={handleDeleteImage}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="flex gap-2">
+                <Button type="submit" disabled={saving} className="flex-1">
+                  {saving ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Save className="size-4" />
+                      Save About Me
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </form>
   );
-};
-
-export default AboutManager;
-
+}

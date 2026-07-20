@@ -1,13 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { toast } from 'react-hot-toast';
-import { FaHome, FaImage, FaLink, FaPlus, FaTrash } from 'react-icons/fa';
-import ConfirmationDialog from '../ConfirmationDialog';
+"use client";
 
-// Cloudinary configuration
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+import React, { useEffect, useState } from "react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { toast } from "sonner";
+import {
+  ImageIcon,
+  Link2,
+  Plus,
+  Trash2,
+  Save,
+  Loader2,
+} from "lucide-react";
+import { db } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 interface HomeData {
   name: string;
@@ -15,6 +44,8 @@ interface HomeData {
   bio: string;
   profileImage: string;
   cloudinaryPublicId?: string;
+  /** Images for the 4 pinned hero panels (index 0–3). Empty = use defaults. */
+  heroPanelImages?: string[];
   typeAnimationSequence?: (string | number)[];
   socialLinks: {
     platform: string;
@@ -22,83 +53,130 @@ interface HomeData {
   }[];
 }
 
-const HomeManager: React.FC = () => {
+const HERO_PANEL_LABELS = [
+  "Panel 1 — Convert",
+  "Panel 2 — Proof",
+  "Panel 3 — Offer",
+  "Panel 4 — Next step",
+];
+
+const emptyHeroPanels = () => ["", "", "", ""];
+
+const DEFAULT_TYPE_SEQUENCE: (string | number)[] = [
+  "I am Aime Patrick Ndagijimana",
+  3000,
+  "Full Stack & AI Solutions Engineer",
+  3000,
+  "Software Engineer",
+  3000,
+  "AI Agent Developer",
+  3000,
+  "AI Engineer",
+  3000,
+];
+
+const DEFAULT_SOCIAL_LINKS = [
+  { platform: "instagram", url: "" },
+  { platform: "linkedin", url: "" },
+  { platform: "github", url: "" },
+];
+
+export default function HomeManager() {
   const [homeData, setHomeData] = useState<HomeData>({
-    name: '',
-    title: '',
-    bio: '',
-    profileImage: '',
-    typeAnimationSequence: ['I am Aime Patrick Ndagijimana', 3000, 'Full Stack & AI Solutions Engineer', 3000, 'Software Engineer', 3000, 'AI Agent Developer', 3000, 'AI Engineer', 3000],
-    socialLinks: [
-      { platform: 'instagram', url: '' },
-      { platform: 'linkedin', url: '' },
-      { platform: 'github', url: '' },
-    ],
+    name: "",
+    title: "",
+    bio: "",
+    profileImage: "",
+    heroPanelImages: emptyHeroPanels(),
+    typeAnimationSequence: DEFAULT_TYPE_SEQUENCE,
+    socialLinks: DEFAULT_SOCIAL_LINKS,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
-  const [imageInputRef, setImageInputRef] = useState<HTMLInputElement | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageInputRef, setImageInputRef] = useState<HTMLInputElement | null>(
+    null
+  );
+  const [panelImageFiles, setPanelImageFiles] = useState<(File | null)[]>([
+    null,
+    null,
+    null,
+    null,
+  ]);
+  const [panelImagePreviews, setPanelImagePreviews] =
+    useState<string[]>(emptyHeroPanels());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [newAnimationText, setNewAnimationText] = useState('');
-  const [newAnimationDuration, setNewAnimationDuration] = useState('3000');
+  const [newAnimationText, setNewAnimationText] = useState("");
+  const [newAnimationDuration, setNewAnimationDuration] = useState("3000");
+  const [accordionValue, setAccordionValue] = useState<string[]>([
+    "basics",
+    "animation",
+    "socials",
+    "media",
+  ]);
 
   useEffect(() => {
-    fetchHomeData();
+    void fetchHomeData();
   }, []);
 
   const fetchHomeData = async () => {
     try {
       setLoading(true);
-      const profileDoc = doc(db, 'profile', 'main');
+      const profileDoc = doc(db, "profile", "main");
       const profileSnapshot = await getDoc(profileDoc);
-      
+
       if (profileSnapshot.exists()) {
         const data = profileSnapshot.data();
+        const panels = Array.isArray(data.heroPanelImages)
+          ? [...data.heroPanelImages, "", "", "", ""].slice(0, 4)
+          : emptyHeroPanels();
         const homeDataUpdate: HomeData = {
-          name: data.name || '',
-          title: data.title || '',
-          bio: data.bio || '',
-          profileImage: data.profileImage || '',
-          typeAnimationSequence: data.typeAnimationSequence || ['I am Aime Patrick Ndagijimana', 3000, 'Full Stack & AI Solutions Engineer', 3000, 'Software Engineer', 3000, 'AI Agent Developer', 3000, 'AI Engineer', 3000],
-          socialLinks: data.socialLinks || [
-            { platform: 'instagram', url: '' },
-            { platform: 'linkedin', url: '' },
-            { platform: 'github', url: '' },
-          ],
+          name: data.name || "",
+          title: data.title || "",
+          bio: data.bio || "",
+          profileImage: data.profileImage || "",
+          heroPanelImages: panels,
+          typeAnimationSequence:
+            data.typeAnimationSequence || DEFAULT_TYPE_SEQUENCE,
+          socialLinks: data.socialLinks || DEFAULT_SOCIAL_LINKS,
         };
-        // Only include cloudinaryPublicId if it exists
         if (data.cloudinaryPublicId) {
           homeDataUpdate.cloudinaryPublicId = data.cloudinaryPublicId;
         }
         setHomeData(homeDataUpdate);
-        setImagePreview(data.profileImage || '');
+        setImagePreview(data.profileImage || "");
+        setPanelImagePreviews(panels);
+        setPanelImageFiles([null, null, null, null]);
       }
     } catch (error) {
-      console.error('Error fetching home data:', error);
-      toast.error('Failed to load home data');
+      console.error("Error fetching home data:", error);
+      toast.error("Failed to load home data");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setHomeData(prev => ({ ...prev, [name]: value }));
+    setHomeData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const maxSize = 20 * 1024 * 1024; // 20 MB
-      
+      const maxSize = 20 * 1024 * 1024;
+
       if (file.size > maxSize) {
-        toast.error(`File size too large. Maximum size is 20 MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-        e.target.value = ''; // Clear the input
+        toast.error(
+          `File size too large. Maximum size is 20 MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB`
+        );
+        e.target.value = "";
         return;
       }
-      
+
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -106,21 +184,85 @@ const HomeManager: React.FC = () => {
 
   const handleDeleteImage = () => {
     setImageFile(null);
-    setImagePreview('');
-    setHomeData(prev => {
-      const { cloudinaryPublicId, ...rest } = prev;
+    setImagePreview("");
+    setHomeData((prev) => {
+      const { cloudinaryPublicId: _, ...rest } = prev;
       return {
         ...rest,
-        profileImage: '',
+        profileImage: "",
       };
     });
-    toast.success('Image removed!');
+    toast.success("Image removed!");
+  };
+
+  const handlePanelImageChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("File size too large. Maximum size is 20 MB.");
+      e.target.value = "";
+      return;
+    }
+    setPanelImageFiles((prev) => {
+      const next = [...prev];
+      next[index] = file;
+      return next;
+    });
+    setPanelImagePreviews((prev) => {
+      const next = [...prev];
+      next[index] = URL.createObjectURL(file);
+      return next;
+    });
+  };
+
+  const clearPanelImage = (index: number) => {
+    setPanelImageFiles((prev) => {
+      const next = [...prev];
+      next[index] = null;
+      return next;
+    });
+    setPanelImagePreviews((prev) => {
+      const next = [...prev];
+      next[index] = "";
+      return next;
+    });
+    setHomeData((prev) => {
+      const panels = [...(prev.heroPanelImages || emptyHeroPanels())];
+      panels[index] = "";
+      return { ...prev, heroPanelImages: panels };
+    });
+    toast.success(`${HERO_PANEL_LABELS[index]} image cleared`);
+  };
+
+  const uploadToCloudinary = async (file: File, folder: string) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET!);
+    formData.append("folder", folder);
+    formData.append("max_file_size", "20971520");
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      { method: "POST", body: formData }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.error?.message || "Failed to upload image");
+    }
+
+    const data = await response.json();
+    return { url: data.secure_url as string, publicId: data.public_id as string };
   };
 
   const handleSocialLinkChange = (platform: string, url: string) => {
-    setHomeData(prev => ({
+    setHomeData((prev) => ({
       ...prev,
-      socialLinks: prev.socialLinks.map(link =>
+      socialLinks: prev.socialLinks.map((link) =>
         link.platform === platform ? { ...link, url } : link
       ),
     }));
@@ -129,7 +271,7 @@ const HomeManager: React.FC = () => {
   const addAnimationItem = () => {
     if (newAnimationText.trim()) {
       const duration = parseInt(newAnimationDuration) || 3000;
-      setHomeData(prev => ({
+      setHomeData((prev) => ({
         ...prev,
         typeAnimationSequence: [
           ...(prev.typeAnimationSequence || []),
@@ -137,30 +279,31 @@ const HomeManager: React.FC = () => {
           duration,
         ],
       }));
-      setNewAnimationText('');
-      setNewAnimationDuration('3000');
+      setNewAnimationText("");
+      setNewAnimationDuration("3000");
     }
   };
 
   const removeAnimationItem = (originalIndex: number) => {
-    setHomeData(prev => {
+    setHomeData((prev) => {
       const newSequence = [...(prev.typeAnimationSequence || [])];
-      // Find the actual index in the sequence (originalIndex is the index in animationItems array)
       const actualIndex = originalIndex * 2;
-      // Remove both text and duration
       newSequence.splice(actualIndex, 2);
       return {
         ...prev,
         typeAnimationSequence: newSequence,
       };
     });
-    toast.success('Animation item removed!');
+    toast.success("Animation item removed!");
   };
 
-  const updateAnimationItem = (originalIndex: number, text: string, duration: number) => {
-    setHomeData(prev => {
+  const updateAnimationItem = (
+    originalIndex: number,
+    text: string,
+    duration: number
+  ) => {
+    setHomeData((prev) => {
       const newSequence = [...(prev.typeAnimationSequence || [])];
-      // originalIndex is the index in animationItems array, multiply by 2 to get actual sequence index
       const actualIndex = originalIndex * 2;
       newSequence[actualIndex] = text;
       newSequence[actualIndex + 1] = duration;
@@ -173,69 +316,68 @@ const HomeManager: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      toast.error('Cloudinary is not configured');
+      toast.error("Cloudinary is not configured");
       return;
     }
-    
+
     try {
       setSaving(true);
       let imageUrl = homeData.profileImage;
       let cloudinaryPublicId = homeData.cloudinaryPublicId;
 
-      // Upload image if new file selected
       if (imageFile) {
-        toast.loading('Uploading image...');
-        
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', UPLOAD_PRESET);
-        formData.append('folder', 'portfolio/home');
-        formData.append('max_file_size', '20971520'); // 20 MB in bytes
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-          {
-            method: 'POST',
-            body: formData,
-          }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData?.error?.message || 'Failed to upload image';
-          throw new Error(errorMessage);
-        }
-
-        const data = await response.json();
-        imageUrl = data.secure_url;
-        cloudinaryPublicId = data.public_id;
-        
+        toast.loading("Uploading profile image...");
+        const uploaded = await uploadToCloudinary(imageFile, "portfolio/home");
+        imageUrl = uploaded.url;
+        cloudinaryPublicId = uploaded.publicId;
         toast.dismiss();
-        toast.success('Image uploaded!');
+        toast.success("Profile image uploaded!");
       }
 
-      // Save to Firestore
-      const profileDoc = doc(db, 'profile', 'main');
-      // Exclude cloudinaryPublicId from spread to avoid undefined values
+      const heroPanelImages = [
+        ...(homeData.heroPanelImages || emptyHeroPanels()),
+      ];
+      for (let i = 0; i < 4; i++) {
+        const file = panelImageFiles[i];
+        if (file) {
+          toast.loading(`Uploading ${HERO_PANEL_LABELS[i]}...`);
+          const uploaded = await uploadToCloudinary(
+            file,
+            "portfolio/home/panels"
+          );
+          heroPanelImages[i] = uploaded.url;
+          toast.dismiss();
+        }
+      }
+
+      const profileDoc = doc(db, "profile", "main");
       const { cloudinaryPublicId: _, ...homeDataWithoutCloudinaryId } = homeData;
-      const dataToSave: any = {
+      const dataToSave: Record<string, unknown> = {
         ...homeDataWithoutCloudinaryId,
         profileImage: imageUrl,
+        heroPanelImages,
       };
-      // Only include cloudinaryPublicId if it has a value
       if (cloudinaryPublicId) {
         dataToSave.cloudinaryPublicId = cloudinaryPublicId;
       }
       await setDoc(profileDoc, dataToSave, { merge: true });
 
-      toast.success('Home section updated successfully!');
+      setHomeData((prev) => ({
+        ...prev,
+        profileImage: imageUrl,
+        heroPanelImages,
+      }));
+      setPanelImagePreviews(heroPanelImages);
+      toast.success("Home section updated successfully!");
       setImageFile(null);
-    } catch (error: any) {
-      console.error('Error saving home data:', error);
+      setPanelImageFiles([null, null, null, null]);
+    } catch (error: unknown) {
+      console.error("Error saving home data:", error);
       toast.dismiss();
-      const errorMessage = error?.message || 'Failed to save home data';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save home data";
       toast.error(errorMessage);
     } finally {
       setSaving(false);
@@ -244,20 +386,26 @@ const HomeManager: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-400 font-medium">Loading home data...</p>
-        </div>
+      <div className="space-y-3">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+        <Skeleton className="h-32 w-full rounded-xl" />
       </div>
     );
   }
 
-  // Parse animation sequence: [text1, duration1, text2, duration2, ...]
-  const animationItems: Array<{ text: string; duration: number; originalIndex: number }> = [];
+  const animationItems: Array<{
+    text: string;
+    duration: number;
+    originalIndex: number;
+  }> = [];
   const sequence = homeData.typeAnimationSequence || [];
   for (let i = 0; i < sequence.length; i += 2) {
-    if (i + 1 < sequence.length && typeof sequence[i] === 'string' && typeof sequence[i + 1] === 'number') {
+    if (
+      i + 1 < sequence.length &&
+      typeof sequence[i] === "string" &&
+      typeof sequence[i + 1] === "number"
+    ) {
       animationItems.push({
         text: sequence[i] as string,
         duration: sequence[i + 1] as number,
@@ -267,231 +415,365 @@ const HomeManager: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Card */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl p-6 text-white shadow-xl animate-slideUp">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
-            <FaHome className="text-2xl" />
-          </div>
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold">Home Section Manager</h2>
-            <p className="text-gray-300 text-sm mt-1">Manage your home page content and hero section</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Card */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 p-8 rounded-2xl shadow-xl border-2 border-orange-500/30 animate-slideUp" style={{ animationDelay: '100ms' }}>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-                <FaHome className="text-orange-400" />
-                Name *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={homeData.name}
-                onChange={handleInputChange}
-                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                placeholder="e.g., Aime Patrick Ndagijimana"
-                required
-              />
+    <form onSubmit={handleSubmit}>
+      <Accordion
+        type="multiple"
+        value={accordionValue}
+        onValueChange={setAccordionValue}
+        className="w-full"
+      >
+        <AccordionItem value="basics" className="border-b">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="text-left">
+              <p className="font-medium">Basic Info</p>
+              <p className="text-xs font-normal text-muted-foreground">
+                Name, title, and bio shown on the home section
+              </p>
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-                <FaHome className="text-orange-400" />
-                Title *
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={homeData.title}
-                onChange={handleInputChange}
-                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                placeholder="e.g., Software Engineer"
-                required
-              />
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-6 pt-1">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={homeData.name}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Aime Patrick Ndagijimana"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    name="title"
+                    value={homeData.title}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Software Engineer"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio / Description</Label>
+                <Textarea
+                  id="bio"
+                  name="bio"
+                  value={homeData.bio}
+                  onChange={handleInputChange}
+                  placeholder="Brief description for the home section..."
+                  className="min-h-28"
+                  required
+                />
+              </div>
             </div>
-          </div>
+          </AccordionContent>
+        </AccordionItem>
 
-          {/* Bio */}
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm">Bio / Description *</label>
-            <textarea
-              name="bio"
-              value={homeData.bio}
-              onChange={handleInputChange}
-              className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 min-h-[100px] text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-              placeholder="Brief description for the home section..."
-              required
-            />
-          </div>
-
-          {/* TypeAnimation Sequence */}
-          <div className="flex flex-col gap-4">
-            <label className="font-medium text-gray-300 text-sm">Animated Titles (TypeAnimation Sequence)</label>
-            <div className="p-4 bg-black/30 rounded-xl border-2 border-orange-500/30">
-              <div className="space-y-3">
-                {animationItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-black/50 rounded-lg">
-                    <div className="flex-1 grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        value={item.text}
-                        onChange={(e) => updateAnimationItem(idx, e.target.value, item.duration)}
-                        className="bg-black/50 border border-orange-500/30 rounded-lg p-2 text-white text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
-                        placeholder="Animation text"
-                      />
-                      <input
-                        type="number"
-                        value={item.duration}
-                        onChange={(e) => updateAnimationItem(idx, item.text, parseInt(e.target.value) || 3000)}
-                        className="bg-black/50 border border-orange-500/30 rounded-lg p-2 text-white text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20"
-                        placeholder="Duration (ms)"
-                        min="1000"
-                        step="1000"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeAnimationItem(idx)}
-                      className="p-2 bg-red-500/30 hover:bg-red-500/50 text-red-300 hover:text-white rounded-lg transition-all"
-                      aria-label="Remove animation item"
+        <AccordionItem value="animation" className="border-b">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="text-left">
+              <p className="font-medium">Animated Titles</p>
+              <p className="text-xs font-normal text-muted-foreground">
+                TypeAnimation sequence in the hero
+              </p>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-6 pt-1">
+              {animationItems.length > 0 && (
+                <div className="space-y-3">
+                  {animationItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="grid gap-3 rounded-lg border p-3 sm:grid-cols-[1fr_1fr_auto]"
                     >
-                      <FaTrash className="text-sm" />
-                    </button>
+                      <div className="space-y-2">
+                        <Label htmlFor={`anim-text-${idx}`}>Text</Label>
+                        <Input
+                          id={`anim-text-${idx}`}
+                          value={item.text}
+                          onChange={(e) =>
+                            updateAnimationItem(
+                              idx,
+                              e.target.value,
+                              item.duration
+                            )
+                          }
+                          placeholder="Animation text"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`anim-duration-${idx}`}>
+                          Duration (ms)
+                        </Label>
+                        <Input
+                          id={`anim-duration-${idx}`}
+                          type="number"
+                          value={item.duration}
+                          onChange={(e) =>
+                            updateAnimationItem(
+                              idx,
+                              item.text,
+                              parseInt(e.target.value) || 3000
+                            )
+                          }
+                          min={1000}
+                          step={1000}
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => removeAnimationItem(idx)}
+                          aria-label="Remove animation item"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Separator />
+
+              <div className="space-y-3 rounded-lg border p-4">
+                <Label className="flex items-center gap-2">
+                  <Plus className="size-4" />
+                  Add Animation Line
+                </Label>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor="newAnimationText">Text</Label>
+                    <Input
+                      id="newAnimationText"
+                      value={newAnimationText}
+                      onChange={(e) => setNewAnimationText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addAnimationItem();
+                        }
+                      }}
+                      placeholder="New animation text"
+                    />
                   </div>
-                ))}
-              </div>
-              <div className="flex gap-2 mt-4">
-                <input
-                  type="text"
-                  value={newAnimationText}
-                  onChange={(e) => setNewAnimationText(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addAnimationItem())}
-                  className="flex-1 bg-black/50 border-2 border-orange-500/30 rounded-xl p-2 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  placeholder="New animation text"
-                />
-                <input
-                  type="number"
-                  value={newAnimationDuration}
-                  onChange={(e) => setNewAnimationDuration(e.target.value)}
-                  className="w-24 bg-black/50 border-2 border-orange-500/30 rounded-xl p-2 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                  placeholder="Duration"
-                  min="1000"
-                  step="1000"
-                />
-                <button
-                  type="button"
-                  onClick={addAnimationItem}
-                  className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:from-orange-600 hover:to-red-600 transition-all flex items-center gap-2"
-                >
-                  <FaPlus className="text-xs" />
-                  Add
-                </button>
+                  <div className="w-full space-y-2 sm:w-28">
+                    <Label htmlFor="newAnimationDuration">Duration</Label>
+                    <Input
+                      id="newAnimationDuration"
+                      type="number"
+                      value={newAnimationDuration}
+                      onChange={(e) => setNewAnimationDuration(e.target.value)}
+                      min={1000}
+                      step={1000}
+                    />
+                  </div>
+                  <Button type="button" variant="secondary" onClick={addAnimationItem}>
+                    <Plus className="size-4" />
+                    Add
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          </AccordionContent>
+        </AccordionItem>
 
-          {/* Social Links */}
-          <div className="flex flex-col gap-4">
-            <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-              <FaLink className="text-orange-400" />
-              Social Links
-            </label>
-            <div className="space-y-3">
-              {homeData.socialLinks.map((link, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <span className="w-24 text-sm text-gray-300 capitalize">{link.platform}:</span>
-                  <input
+        <AccordionItem value="socials" className="border-b">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="text-left">
+              <p className="font-medium flex items-center gap-2">
+                <Link2 className="size-4" />
+                Social Links
+              </p>
+              <p className="text-xs font-normal text-muted-foreground">
+                Instagram, LinkedIn, and GitHub profile URLs
+              </p>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4 pt-1">
+              {homeData.socialLinks.map((link) => (
+                <div
+                  key={link.platform}
+                  className="space-y-2 rounded-lg border p-3"
+                >
+                  <Label
+                    htmlFor={`social-${link.platform}`}
+                    className="capitalize"
+                  >
+                    {link.platform}
+                  </Label>
+                  <Input
+                    id={`social-${link.platform}`}
                     type="url"
                     value={link.url}
-                    onChange={(e) => handleSocialLinkChange(link.platform, e.target.value)}
-                    className="flex-1 bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    onChange={(e) =>
+                      handleSocialLinkChange(link.platform, e.target.value)
+                    }
                     placeholder={`https://${link.platform}.com/your-profile`}
                   />
                 </div>
               ))}
             </div>
-          </div>
+          </AccordionContent>
+        </AccordionItem>
 
-          {/* Profile Image */}
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm flex items-center gap-2">
-              <FaImage className="text-orange-400" />
-              Profile Image
-            </label>
-            <div className="relative">
-              <input
-                ref={(input) => setImageInputRef(input)}
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-gray-300 border-2 border-orange-500/30 rounded-xl cursor-pointer bg-black/50 focus:outline-none file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-orange-500 file:to-red-500 file:text-white hover:file:from-orange-600 hover:file:to-red-600 file:transition-all"
-              />
+        <AccordionItem value="media" className="border-b-0">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="text-left">
+              <p className="font-medium flex items-center gap-2">
+                <ImageIcon className="size-4" />
+                Media
+              </p>
+              <p className="text-xs font-normal text-muted-foreground">
+                Profile portrait and hero panel images
+              </p>
             </div>
-            {(imagePreview || homeData.profileImage) && (
-              <div className="mt-4 p-4 bg-black/30 rounded-xl border border-orange-500/20 relative group">
-                <img
-                  src={imagePreview || homeData.profileImage}
-                  alt="Profile preview"
-                  onClick={() => imageInputRef?.click()}
-                  className="w-40 h-40 rounded-2xl object-cover shadow-lg border-4 border-orange-500/30 cursor-pointer hover:border-orange-500 transition-all"
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-6 pt-1">
+              <div className="space-y-2">
+                <Label htmlFor="profileImage">Profile Image</Label>
+                <Input
+                  id="profileImage"
+                  ref={(input) => setImageInputRef(input)}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
                 />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDeleteConfirm(true);
-                  }}
-                  className="absolute top-6 right-6 p-2 bg-red-500/90 hover:bg-red-600 text-white rounded-lg shadow-lg transition-all hover:scale-110 opacity-0 group-hover:opacity-100"
-                  aria-label="Delete image"
-                >
-                  <FaTrash className="text-sm" />
-                </button>
-                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/70 px-3 py-1 rounded-lg text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  Click image to change
+                {(imagePreview || homeData.profileImage) && (
+                  <div className="relative mt-2 inline-block overflow-hidden rounded-md border">
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef?.click()}
+                      className="block"
+                      aria-label="Change profile image"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imagePreview || homeData.profileImage}
+                        alt="Profile preview"
+                        className="max-h-48 w-full object-cover"
+                      />
+                    </button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 size-8"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      aria-label="Delete image"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Max 20 MB. Click the preview to replace.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <Label>Hero Panel Images</Label>
+                <p className="text-xs text-muted-foreground">
+                  Leave empty to use defaults. Panel 2 defaults to the proof
+                  photo on the public site.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {HERO_PANEL_LABELS.map((label, index) => (
+                    <div
+                      key={label}
+                      className="space-y-3 rounded-lg border p-3"
+                    >
+                      <p className="text-sm font-medium">{label}</p>
+                      <div className="space-y-2">
+                        <Label htmlFor={`panel-${index}`}>Image</Label>
+                        <Input
+                          id={`panel-${index}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePanelImageChange(index, e)}
+                        />
+                      </div>
+                      {(panelImagePreviews[index] ||
+                        homeData.heroPanelImages?.[index]) && (
+                        <div className="relative overflow-hidden rounded-md border">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={
+                              panelImagePreviews[index] ||
+                              homeData.heroPanelImages?.[index]
+                            }
+                            alt={label}
+                            className="h-28 w-full object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 size-8"
+                            onClick={() => clearPanelImage(index)}
+                            aria-label={`Clear ${label}`}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02]"
-          >
-            {saving ? (
-              <span className="flex items-center justify-center gap-3">
-                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                Saving...
-              </span>
-            ) : (
-              'Save Home Section'
-            )}
-          </button>
-        </form>
-      </div>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={saving} className="flex-1">
+                  {saving ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Save className="size-4" />
+                      Save Home Section
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
-      {/* Delete Image Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDeleteImage}
-        title="Delete Image"
-        message="Are you sure you want to delete the current image? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-      />
-    </div>
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete image?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the current profile image? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={handleDeleteImage}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </form>
   );
-};
-
-export default HomeManager;
-
+}

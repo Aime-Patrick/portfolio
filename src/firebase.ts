@@ -1,24 +1,65 @@
-// Firebase App (the core Firebase SDK) is always required and must be listed first
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
+import { initializeApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getAuth, type Auth } from "firebase/auth";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
+import { decodeBase64Json } from "@/lib/decodeBase64Json";
 
-// TODO: Replace the following with your app's Firebase project configuration
-const firebaseConfig = {
-  apiKey: `${import.meta.env.VITE_API_KEY}`,
-  authDomain: `${import.meta.env.VITE_AUTH_DOMAIN}`,
-  projectId: `${import.meta.env.VITE_PROJECT_ID}`,
-  storageBucket: `${import.meta.env.VITE_STORAGE_BUCKET}`,
-  messagingSenderId: `${import.meta.env.VITE_MESSAGING_SENDER_ID}`,
-  appId: `${import.meta.env.VITE_APP_ID}`,
-  measurementId: `${import.meta.env.VITE_MEASUREMENT_ID}`
+type ClientFirebaseConfig = FirebaseOptions & {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+function parseClientConfig(): ClientFirebaseConfig | null {
+  const decoded = decodeBase64Json<ClientFirebaseConfig>(
+    process.env.NEXT_PUBLIC_FIREBASE_CONFIG_BASE64
+  );
+  if (!decoded) return null;
 
-// Initialize Firestore, Auth, and Storage
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
+  const required = [
+    "apiKey",
+    "authDomain",
+    "projectId",
+    "storageBucket",
+    "messagingSenderId",
+    "appId",
+  ] as const;
+
+  const missing = required.filter((key) => !decoded[key]);
+  if (missing.length) {
+    console.error(
+      `[Firebase] Decoded config is missing: ${missing.join(", ")}`
+    );
+    return null;
+  }
+
+  return decoded;
+}
+
+const parsed = parseClientConfig();
+export const isFirebaseConfigured = parsed !== null;
+
+if (!isFirebaseConfigured && typeof window !== "undefined") {
+  console.error(
+    "[Firebase] Missing NEXT_PUBLIC_FIREBASE_CONFIG_BASE64. " +
+      "Encode your firebaseConfig JSON as base64 and put it in `.env.local`."
+  );
+}
+
+const firebaseConfig: FirebaseOptions = parsed ?? {
+  apiKey: "missing",
+  authDomain: "missing.firebaseapp.com",
+  projectId: "missing",
+  storageBucket: "missing.appspot.com",
+  messagingSenderId: "0",
+  appId: "1:0:web:0",
+};
+
+const app: FirebaseApp = initializeApp(firebaseConfig);
+export const db: Firestore = getFirestore(app);
+export const auth: Auth = getAuth(app);
+export const storage: FirebaseStorage = getStorage(app);
+export { app };

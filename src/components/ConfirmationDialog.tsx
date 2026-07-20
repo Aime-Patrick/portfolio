@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect } from 'react';
 import { IoClose, IoWarning } from 'react-icons/io5';
 

@@ -1,7 +1,9 @@
+"use client";
+
 import React, { useRef } from "react";
 import emailjs from "@emailjs/browser";
 import SocialLinks from "../components/socialLinks";
-import toast from 'react-hot-toast'
+import { toast } from "sonner";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -14,9 +16,13 @@ const ContactSection: React.FC = () => {
 
     try {
       // Get EmailJS credentials from environment variables
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+      if (!serviceId || !templateId || !publicKey) {
+        throw new Error("EmailJS is not configured");
+      }
       
       // Send email via EmailJS
       await emailjs.sendForm(
@@ -62,7 +68,7 @@ const ContactSection: React.FC = () => {
           </p>
           <div className="geomatric-box"></div>
         </div>
-        <div className="contact__mail bg-[#1f1f1f]/80 backdrop-blur-sm">
+        <div className="contact__mail">
           <h2 className="contact__title">Send Me A Message</h2>
           <form className="contact__form" id="contact-form" ref={form} onSubmit={sendEmail} aria-label="Contact form">
             <div className="contact__group">

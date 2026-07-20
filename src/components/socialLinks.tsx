@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { IoLogoInstagram } from "react-icons/io5";
 import { FaLinkedin } from "react-icons/fa";

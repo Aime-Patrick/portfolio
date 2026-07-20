@@ -1,17 +1,19 @@
-import React from "react";
-import { 
-  FaProjectDiagram, 
-  FaUserCog, 
-  FaSignOutAlt, 
-  FaHome, 
-  FaTools, 
-  FaEnvelope, 
-  FaCog,
-  FaChartLine,
-  FaAward
-} from "react-icons/fa";
-import { MdClose } from "react-icons/md";
-import { HiSparkles } from "react-icons/hi";
+"use client";
+
+import type { FC } from "react";
+import {
+  LayoutDashboard,
+  Layers3,
+  Inbox,
+  Settings,
+  LogOut,
+  X,
+  Sparkles,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 type AdminSidebarProps = {
   sidebarOpen: boolean;
@@ -19,141 +21,125 @@ type AdminSidebarProps = {
   active: string;
   setActive: (key: string) => void;
   handleLogout: () => void;
+  unreadCount?: number;
 };
 
-const navItems = [
-  { label: "Dashboard", icon: <FaHome />, key: "dashboard", gradient: "from-orange-500 to-red-500" },
-  { label: "Home Section", icon: <FaHome />, key: "home", gradient: "from-orange-500 to-red-500" },
-  { label: "Projects", icon: <FaProjectDiagram />, key: "projects", gradient: "from-orange-500 to-red-600" },
-  { label: "Services", icon: <FaTools />, key: "services", gradient: "from-orange-600 to-red-500" },
-  { label: "Certificates", icon: <FaAward />, key: "certificates", gradient: "from-orange-500 to-red-500" },
-  { label: "About Me", icon: <FaUserCog />, key: "about", gradient: "from-orange-600 to-red-600" },
-  { label: "Profile", icon: <FaUserCog />, key: "profile", gradient: "from-orange-500 to-red-500" },
-  { label: "Messages", icon: <FaEnvelope />, key: "messages", gradient: "from-orange-500 to-red-600" },
-  { label: "Settings", icon: <FaCog />, key: "settings", gradient: "from-orange-600 to-red-500" },
+const generalItems = [
+  { label: "Dashboard", icon: LayoutDashboard, key: "dashboard" },
+  { label: "Content", icon: Layers3, key: "content" },
+  { label: "Messages", icon: Inbox, key: "messages" },
 ];
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ 
-  sidebarOpen, 
-  setSidebarOpen, 
-  active, 
-  setActive, 
-  handleLogout 
-}) => (
-  <>
-    {/* Sidebar */}
-    <aside
-      className={`fixed z-50 top-0 left-0 h-screen w-72 bg-gradient-to-b from-gray-900 via-gray-900 to-black text-white flex flex-col transition-all duration-300 ease-out shadow-2xl shadow-black/50 lg:static lg:translate-x-0 ${
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      }`}
-    >
-      {/* Header */}
-      <div className="relative px-6 py-6 border-b border-gray-700/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-[var(--first-color)] to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
-                <HiSparkles className="text-xl text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900 animate-pulse"></div>
+const supportItems = [{ label: "Settings", icon: Settings, key: "settings" }];
+
+const AdminSidebar: FC<AdminSidebarProps> = ({
+  sidebarOpen,
+  setSidebarOpen,
+  active,
+  setActive,
+  handleLogout,
+  unreadCount = 0,
+}) => {
+  const renderItem = (item: (typeof generalItems)[number]) => {
+    const Icon = item.icon;
+    const isActive = active === item.key;
+    return (
+      <Button
+        key={item.key}
+        type="button"
+        variant={isActive ? "default" : "ghost"}
+        className={cn(
+          "h-8 w-full justify-start gap-2 px-2.5 text-sm font-medium",
+          !isActive && "text-muted-foreground"
+        )}
+        onClick={() => {
+          setActive(item.key);
+          if (window.innerWidth < 1024) setSidebarOpen(false);
+        }}
+      >
+        <Icon className="size-3.5 shrink-0" />
+        <span className="flex-1 text-left">{item.label}</span>
+        {item.key === "messages" && unreadCount > 0 ? (
+          <Badge
+            variant={isActive ? "secondary" : "default"}
+            className="h-5 min-w-5 px-1.5 text-[10px]"
+          >
+            {unreadCount}
+          </Badge>
+        ) : null}
+      </Button>
+    );
+  };
+
+  return (
+    <>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex h-full w-52 flex-col border-r border-border bg-card transition-transform duration-200 ease-out lg:static lg:h-auto lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between gap-2 px-3 py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <Sparkles className="size-3.5" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                Admin Panel
-              </h2>
-              <p className="text-xs text-gray-400">Manage your portfolio</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">Portfolio</p>
+              <p className="text-xs text-muted-foreground">Admin</p>
             </div>
           </div>
-          <button
-            className="lg:hidden p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+          <Button
+            size="icon"
+            variant="ghost"
+            className="size-7 lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close sidebar"
           >
-            <MdClose className="text-xl" />
-          </button>
+            <X className="size-3.5" />
+          </Button>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-1.5 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-        {navItems.map((item, index) => (
-          <button
-            key={item.key}
-            className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium text-sm transition-all duration-300 text-left overflow-hidden ${
-              active === item.key
-                ? "bg-gradient-to-r from-[var(--first-color)] to-orange-600 text-white shadow-lg shadow-orange-500/30"
-                : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
-            }`}
-            onClick={() => {
-              setActive(item.key);
-              if (window.innerWidth < 1024) setSidebarOpen(false);
-            }}
-            aria-label={item.label}
-            style={{ animationDelay: `${index * 50}ms` }}
-          >
-            {/* Icon Container */}
-            <div className={`relative z-10 flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 ${
-              active === item.key
-                ? "bg-white/20"
-                : "bg-gray-800 group-hover:bg-gray-700"
-            }`}>
-              <span className={`text-lg ${
-                active === item.key ? "text-white" : "text-gray-400 group-hover:text-white"
-              }`}>
-                {item.icon}
-              </span>
-            </div>
+        <Separator />
 
-            {/* Label */}
-            <span className="relative z-10 flex-1">{item.label}</span>
-
-            {/* Active Indicator */}
-            {active === item.key && (
-              <div className="absolute right-3 w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            )}
-
-            {/* Gradient Hover Effect */}
-            {active !== item.key && (
-              <div className={`absolute inset-0 bg-gradient-to-r ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-            )}
-          </button>
-        ))}
-
-        {/* Divider */}
-        <div className="h-px bg-gray-700/50 my-3"></div>
-
-        {/* Stats Card (Optional) */}
-        <div className="mt-2 p-4 rounded-xl bg-gradient-to-br from-gray-800 to-gray-800/50 border border-orange-500/30">
-          <div className="flex items-center gap-2 mb-2">
-            <FaChartLine className="text-orange-400" />
-            <span className="text-xs font-semibold text-gray-300">Portfolio Stats</span>
+        <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-3">
+          <div className="space-y-1">
+            <p className="px-2 text-xs font-medium text-muted-foreground">
+              General
+            </p>
+            {generalItems.map(renderItem)}
           </div>
-          <div className="text-2xl font-bold text-white">All Good!</div>
-          <div className="text-xs text-gray-400 mt-1">Everything is running smoothly</div>
+          <div className="space-y-1">
+            <p className="px-2 text-xs font-medium text-muted-foreground">
+              Support
+            </p>
+            {supportItems.map(renderItem)}
+          </div>
+        </nav>
+
+        <div className="border-t border-border p-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-start gap-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="size-3.5" />
+            Logout
+          </Button>
         </div>
-      </nav>
+      </aside>
 
-      {/* Logout Button */}
-      <div className="p-4 border-t border-gray-700/50">
+      {sidebarOpen ? (
         <button
-          className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/50 hover:from-red-600 hover:to-red-700 transition-all duration-300 hover:scale-[1.02]"
-          onClick={handleLogout}
-          aria-label="Logout"
-        >
-          <FaSignOutAlt className="text-lg" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
-
-    {/* Overlay for mobile */}
-    {sidebarOpen && (
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-        onClick={() => setSidebarOpen(false)}
-      />
-    )}
-  </>
-);
+          type="button"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          aria-label="Close sidebar overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      ) : null}
+    </>
+  );
+};
 
 export default AdminSidebar;

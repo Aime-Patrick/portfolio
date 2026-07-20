@@ -1,31 +1,35 @@
-import React, { useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase";
-import { useLocation, Navigate } from "react-router-dom";
+"use client";
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+import { useEffect, useState, type ReactNode } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { usePathname, useRouter } from "next/navigation";
+import { auth } from "@/firebase";
+
+export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
       setLoading(false);
+      if (!user) {
+        router.replace(`/login?from=${encodeURIComponent(pathname)}`);
+      }
     });
     return () => unsubscribe();
-  }, []);
+  }, [router, pathname]);
 
   if (loading) {
-    // Optionally, show a spinner here
-    return null;
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
+  if (!isAuthenticated) return null;
   return <>{children}</>;
-};
-
-export default ProtectedRoute; 
+}

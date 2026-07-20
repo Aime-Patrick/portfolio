@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { IoMenu, IoClose } from "react-icons/io5";
 import { useSiteSettings } from "./SiteSettingsProvider";
@@ -48,7 +50,7 @@ const Header: React.FC = () => {
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-black/80 backdrop-blur-md shadow-lg shadow-black/10 py-3"
+          ? "bg-[var(--body-color)] shadow-[0_1px_16px_hsla(0,0%,0%,0.35)] py-3"
           : "bg-transparent py-5"
       }`}
       id="header"
@@ -62,14 +64,16 @@ const Header: React.FC = () => {
           
           {/* Logo Section */}
           <a
-            href="/"
-            className="flex items-center gap-2 group z-50 relative"
-            aria-label="Home"
+            href="/#"
+            className="flex min-w-0 items-center gap-2 group z-50 relative"
           >
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--first-color)] to-orange-600 shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-6">
-              <span className="text-white font-bold text-xl font-body">P</span>
+            <div
+              className="relative flex shrink-0 items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[var(--first-color)] to-orange-600 shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-6"
+              aria-hidden
+            >
+              <span className="text-white font-bold text-lg sm:text-xl font-body">P</span>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent group-hover:to-white transition-all duration-300">
+            <span className="truncate text-base sm:text-xl font-bold text-[var(--title-color)] group-hover:text-[var(--first-color)] transition-colors duration-300 max-w-[40vw] sm:max-w-none">
               {settings.siteTitle || "CodeWithPatrick."}
             </span>
           </a>
@@ -143,11 +147,11 @@ const Header: React.FC = () => {
 
           {/* Mobile Menu Drawer */}
           <div
-            className={`fixed top-0 right-0 h-screen w-[280px] bg-[#1a1a1a] shadow-2xl z-40 transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) lg:hidden ${
+            className={`fixed top-0 right-0 h-[100svh] w-[min(280px,85vw)] bg-[#1a1a1a] shadow-2xl z-40 transform transition-transform duration-300 ease-out lg:hidden pt-[env(safe-area-inset-top)] ${
               showMenu ? "translate-x-0" : "translate-x-full"
             }`}
           >
-            <div className="flex flex-col h-full pt-20 px-6 pb-6">
+            <div className="flex flex-col h-full pt-20 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
               <ul className="flex flex-col gap-2">
                 {navLinks.map((item) => (
                   <li key={item.id}>
@@ -160,7 +164,7 @@ const Header: React.FC = () => {
                           : "text-gray-400 hover:text-white hover:bg-white/5"
                       }`}
                     >
-                      <span className="text-lg font-medium">{item.label}</span>
+                      <span className="text-base font-medium sm:text-lg">{item.label}</span>
                     </a>
                   </li>
                 ))}
@@ -168,7 +172,7 @@ const Header: React.FC = () => {
                   <a
                     href="#contact"
                     onClick={() => handleNavLinkClick("contact")}
-                    className="flex items-center gap-4 px-4 py-3 mt-4 rounded-xl bg-gradient-to-r from-[var(--first-color)] to-orange-600 text-white font-medium shadow-lg shadow-orange-500/20"
+                    className="flex items-center justify-center gap-4 px-4 py-3 mt-4 rounded-xl bg-gradient-to-r from-[var(--first-color)] to-orange-600 text-white font-medium shadow-lg shadow-orange-500/20"
                   >
                     Contact Me
                   </a>
@@ -177,7 +181,7 @@ const Header: React.FC = () => {
               
               <div className="mt-auto">
                 <p className="text-xs text-center text-gray-600">
-                  © 2025 {settings.siteTitle || "Portfolio"}.
+                  © {new Date().getFullYear()} {settings.siteTitle || "Portfolio"}.
                 </p>
               </div>
             </div>

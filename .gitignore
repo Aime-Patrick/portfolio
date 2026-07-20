@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+.next
+out
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
@@ -23,6 +27,13 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.local
+.env.*.local
+
+# Local Firebase / secret material (use .env.example + base64 env vars)
+firebase-web.json
+firebase-admin*.json
+*-service-account.json
 
 # Documentation files (exclude from commits, except README.md and FIREBASE_SETUP.md)
 PROJECT_AUDIT_REPORT.md

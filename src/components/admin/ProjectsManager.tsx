@@ -1,12 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { toast } from 'react-hot-toast';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+"use client";
 
-// Cloudinary configuration for image uploads
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+import { useEffect, useState } from "react";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { toast } from "sonner";
+import {
+  FolderKanban,
+  Pencil,
+  Trash2,
+  Plus,
+  Link2,
+  Sparkles,
+  Loader2,
+  Check,
+} from "lucide-react";
+import { auth, db } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import type { ProjectImportDraft } from "@/lib/projectImport";
+
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 interface Project {
   id: string;
@@ -16,69 +65,88 @@ interface Project {
   description: string;
   links: { url: string; label: string }[];
   imageFile?: File;
-  cloudinaryPublicId?: string; // Store Cloudinary public_id for potential future use
+  cloudinaryPublicId?: string;
 }
 
-const ProjectsManager: React.FC = () => {
+const emptyProject = (): Project => ({
+  id: "",
+  image: "",
+  subtitle: "",
+  title: "",
+  description: "",
+  links: [
+    { url: "", label: "GitHub" },
+    { url: "", label: "Live" },
+  ],
+});
+
+export default function ProjectsManager() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [fetchingUrl, setFetchingUrl] = useState(false);
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [currentProject, setCurrentProject] = useState<Project>({
-    id: '',
-    image: '',
-    subtitle: '',
-    title: '',
-    description: '',
-    links: [{ url: '', label: 'GitHub' }, { url: '', label: 'Live' }],
-  });
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [importDraft, setImportDraft] = useState<ProjectImportDraft | null>(
+    null
+  );
+  const [currentProject, setCurrentProject] = useState<Project>(emptyProject());
+  const [accordionValue, setAccordionValue] = useState<string[]>([
+    "form",
+    "list",
+  ]);
 
   useEffect(() => {
-    fetchProjects();
+    void fetchProjects();
   }, []);
 
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const projectsCollection = collection(db, 'projects');
-      const projectsSnapshot = await getDocs(projectsCollection);
-      const projectsList = projectsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
+      const projectsSnapshot = await getDocs(collection(db, "projects"));
+      const projectsList = projectsSnapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
       })) as Project[];
       setProjects(projectsList);
     } catch (error) {
-      console.error('Error fetching projects:', error);
-      toast.error('Failed to load projects');
+      console.error("Error fetching projects:", error);
+      toast.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setCurrentProject(prev => ({ ...prev, [name]: value }));
+    setCurrentProject((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLinkChange = (index: number, field: 'url' | 'label', value: string) => {
+  const handleLinkChange = (
+    index: number,
+    field: "url" | "label",
+    value: string
+  ) => {
     const updatedLinks = [...currentProject.links];
     updatedLinks[index] = { ...updatedLinks[index], [field]: value };
-    setCurrentProject(prev => ({ ...prev, links: updatedLinks }));
+    setCurrentProject((prev) => ({ ...prev, links: updatedLinks }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files?.[0]) {
       const file = e.target.files[0];
-      const maxSize = 20 * 1024 * 1024; // 20 MB
-      
+      const maxSize = 20 * 1024 * 1024;
+
       if (file.size > maxSize) {
-        toast.error(`File size too large. Maximum size is 20 MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-        e.target.value = ''; // Clear the input
+        toast.error(
+          `File size too large. Maximum size is 20 MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)} MB`
+        );
+        e.target.value = "";
         return;
       }
-      
-      setCurrentProject(prev => ({
+
+      setCurrentProject((prev) => ({
         ...prev,
         imageFile: file,
         image: URL.createObjectURL(file),
@@ -86,538 +154,582 @@ const ProjectsManager: React.FC = () => {
     }
   };
 
-  // Function to extract meta tags from a URL
-  const extractMetaTags = async (url: string): Promise<{ title: string; description: string; image: string }> => {
-    try {
-      // Use a CORS proxy to fetch the HTML
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-      const response = await fetch(proxyUrl);
-      const data = await response.json();
-      
-      // Parse the HTML content
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(data.contents, 'text/html');
-      
-      // Extract meta tags
-      const title = 
-        doc.querySelector('meta[property="og:title"]')?.getAttribute('content') ||
-        doc.querySelector('meta[name="twitter:title"]')?.getAttribute('content') ||
-        doc.querySelector('title')?.textContent ||
-        '';
-      
-      const description = 
-        doc.querySelector('meta[property="og:description"]')?.getAttribute('content') ||
-        doc.querySelector('meta[name="twitter:description"]')?.getAttribute('content') ||
-        doc.querySelector('meta[name="description"]')?.getAttribute('content') ||
-        '';
-      
-      const image = 
-        doc.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
-        doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
-        doc.querySelector('link[rel="icon"]')?.getAttribute('href') ||
-        '';
-      
-      // Handle relative image URLs
-      const absoluteImageUrl = image.startsWith('http') 
-        ? image 
-        : image.startsWith('/') 
-          ? new URL(image, url).href 
-          : new URL(image, url).href;
-      
-      return {
-        title: title.trim(),
-        description: description.trim(),
-        image: absoluteImageUrl || '',
-      };
-    } catch (error) {
-      console.error('Error extracting meta tags:', error);
-      throw error;
-    }
-  };
-
-  // Function to generate screenshot
-  const generateScreenshot = (url: string): string => {
-    // Using screenshot.rocks free API
-    // Alternative: You can use other services like apiflash.com, screenshotapi.net
-    return `https://api.screenshot.rocks/v1/default?url=${encodeURIComponent(url)}&width=1280&height=720&format=png`;
-  };
-
-  // Main function to fetch website info
   const handleFetchFromUrl = async () => {
     if (!websiteUrl.trim()) {
-      toast.error('Please enter a valid URL');
+      toast.error("Please enter a valid URL");
       return;
-    }
-
-    // Validate URL
-    let validUrl = websiteUrl.trim();
-    if (!validUrl.startsWith('http://') && !validUrl.startsWith('https://')) {
-      validUrl = `https://${validUrl}`;
     }
 
     try {
       setFetchingUrl(true);
-      toast.loading('Fetching website information...');
+      setImportDraft(null);
+      const toastId = toast.loading("Scraping with Firecrawl + AI…");
 
-      // Generate screenshot URL immediately
-      const screenshotUrl = generateScreenshot(validUrl);
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        toast.dismiss(toastId);
+        toast.error("Sign in again to import from URL");
+        return;
+      }
 
-      // Extract meta tags
-      const metaData = await extractMetaTags(validUrl);
+      const response = await fetch("/api/projects/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ url: websiteUrl.trim() }),
+      });
 
-      // Update the form
-      setCurrentProject(prev => ({
-        ...prev,
-        title: metaData.title || prev.title,
-        description: metaData.description || prev.description,
-        // Use OG image if available, otherwise use screenshot
-        image: metaData.image || screenshotUrl,
-        // Update Live link URL
-        links: prev.links.map((link, idx) => 
-          idx === 1 
-            ? { ...link, url: validUrl, label: link.label || 'Live' }
-            : link
-        ),
-      }));
+      const data = (await response.json()) as
+        | ProjectImportDraft
+        | { error?: string };
 
-      toast.dismiss();
-      toast.success('Website information fetched successfully!');
-      
+      if (!response.ok) {
+        throw new Error(
+          "error" in data && data.error
+            ? data.error
+            : "Failed to import project from URL"
+        );
+      }
+
+      setImportDraft(data as ProjectImportDraft);
+      toast.dismiss(toastId);
+      toast.success("Draft ready — review and apply");
     } catch (error) {
-      console.error('Error fetching website info:', error);
+      console.error("Error importing project:", error);
       toast.dismiss();
-      toast.error('Failed to fetch website information. Please enter details manually.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to import. Enter details manually."
+      );
     } finally {
       setFetchingUrl(false);
     }
   };
 
+  const applyImportDraft = () => {
+    if (!importDraft) return;
+    setCurrentProject((prev) => ({
+      ...prev,
+      title: importDraft.title,
+      subtitle: importDraft.subtitle,
+      description: importDraft.description,
+      image: importDraft.image || prev.image,
+      links: [
+        {
+          url: importDraft.links[0]?.url || "",
+          label: importDraft.links[0]?.label || "GitHub",
+        },
+        {
+          url: importDraft.links[1]?.url || importDraft.url,
+          label: importDraft.links[1]?.label || "Live",
+        },
+      ],
+    }));
+    setWebsiteUrl(importDraft.url);
+    setImportDraft(null);
+    toast.success("Applied to form — edit anything before saving");
+  };
+
   const resetForm = () => {
-    setCurrentProject({
-      id: '',
-      image: '',
-      subtitle: '',
-      title: '',
-      description: '',
-      links: [{ url: '', label: 'GitHub' }, { url: '', label: 'Live' }],
-    });
-    setWebsiteUrl('');
+    setCurrentProject(emptyProject());
+    setWebsiteUrl("");
+    setImportDraft(null);
     setIsEditing(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check if Cloudinary is configured
+
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      toast.error('Cloudinary is not configured. Please add VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET to your .env file');
+      toast.error(
+        "Cloudinary is not configured. Please add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET to your .env file"
+      );
       return;
     }
-    
+
     try {
       const { id, imageFile, image, ...projectData } = currentProject;
-      
-      // Filter out empty links (optional GitHub/Live links)
-      const validLinks = currentProject.links.filter(link => link.url.trim() !== '');
-      
+      const validLinks = currentProject.links.filter(
+        (link) => link.url.trim() !== ""
+      );
+
       let imageUrl = image;
       let cloudinaryPublicId = currentProject.cloudinaryPublicId;
 
-      // Handle image upload if there's a new file
       if (imageFile) {
-        toast.loading('Uploading image to Cloudinary...');
-        
+        toast.loading("Uploading image to Cloudinary...");
+
         const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', UPLOAD_PRESET);
-        formData.append('folder', 'portfolio/projects'); // Organize in Cloudinary
-        formData.append('max_file_size', '20971520'); // 20 MB in bytes
+        formData.append("file", imageFile);
+        formData.append("upload_preset", UPLOAD_PRESET);
+        formData.append("folder", "portfolio/projects");
+        formData.append("max_file_size", "20971520");
 
         const response = await fetch(
           `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-          {
-            method: 'POST',
-            body: formData,
-          }
+          { method: "POST", body: formData }
         );
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData?.error?.message || 'Failed to upload image to Cloudinary';
+          const errorMessage =
+            errorData?.error?.message ||
+            "Failed to upload image to Cloudinary";
           throw new Error(errorMessage);
         }
 
         const data = await response.json();
-        imageUrl = data.secure_url; // Get secure HTTPS URL
-        cloudinaryPublicId = data.public_id; // Store for potential future use
-        
-        toast.dismiss();
-        toast.success('Image uploaded successfully!');
-      } 
-      // Handle external image URLs (from OG images or screenshots)
-      else if (image && image.startsWith('http') && !image.includes('cloudinary.com') && !image.includes('data:')) {
-        toast.loading('Uploading image from URL to Cloudinary...');
-        
-        try {
-          // Upload image from URL to Cloudinary
-          const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-          const formData = new FormData();
-          formData.append('file', image);
-          formData.append('upload_preset', UPLOAD_PRESET);
-          formData.append('folder', 'portfolio/projects');
+        imageUrl = data.secure_url;
+        cloudinaryPublicId = data.public_id;
 
-          const response = await fetch(uploadUrl, {
-            method: 'POST',
-            body: formData,
-          });
+        toast.dismiss();
+        toast.success("Image uploaded successfully!");
+      } else if (
+        image &&
+        image.startsWith("http") &&
+        !image.includes("cloudinary.com") &&
+        !image.includes("data:")
+      ) {
+        toast.loading("Uploading image from URL to Cloudinary...");
+
+        try {
+          const formData = new FormData();
+          formData.append("file", image);
+          formData.append("upload_preset", UPLOAD_PRESET);
+          formData.append("folder", "portfolio/projects");
+
+          const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+            { method: "POST", body: formData }
+          );
 
           if (!response.ok) {
-            throw new Error('Failed to upload image from URL to Cloudinary');
+            throw new Error("Failed to upload image from URL to Cloudinary");
           }
 
           const data = await response.json();
           imageUrl = data.secure_url;
           cloudinaryPublicId = data.public_id;
-          
+
           toast.dismiss();
-          toast.success('Image uploaded to Cloudinary!');
+          toast.success("Image uploaded to Cloudinary!");
         } catch (error) {
-          console.error('Error uploading external image:', error);
+          console.error("Error uploading external image:", error);
           toast.dismiss();
-          // Continue with the external URL if upload fails
-          toast.error('Could not upload image to Cloudinary, using external URL');
+          toast.error("Could not upload image to Cloudinary, using external URL");
         }
       }
 
-      const projectDataToSave: any = {
+      const projectDataToSave: Record<string, unknown> = {
         ...projectData,
         links: validLinks,
         image: imageUrl,
       };
-      // Only include cloudinaryPublicId if it has a value
       if (cloudinaryPublicId) {
         projectDataToSave.cloudinaryPublicId = cloudinaryPublicId;
       }
 
       if (isEditing) {
-        // Update existing project
-        const projectRef = doc(db, 'projects', id);
-        await updateDoc(projectRef, projectDataToSave);
-        toast.success('Project updated successfully');
+        await updateDoc(doc(db, "projects", id), projectDataToSave);
+        toast.success("Project updated successfully");
       } else {
-        // Add new project
-        await addDoc(collection(db, 'projects'), projectDataToSave);
-        toast.success('Project added successfully');
+        await addDoc(collection(db, "projects"), projectDataToSave);
+        toast.success("Project added successfully");
       }
 
       resetForm();
-      fetchProjects();
-    } catch (error: any) {
-      console.error('Error saving project:', error);
+      void fetchProjects();
+    } catch (error: unknown) {
+      console.error("Error saving project:", error);
       toast.dismiss();
-      const errorMessage = error?.message || 'Failed to save project. Check console for details.';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to save project. Check console for details.";
       toast.error(errorMessage);
     }
   };
 
   const handleEdit = (project: Project) => {
-    setCurrentProject(project);
+    setCurrentProject({
+      ...project,
+      links:
+        project.links?.length >= 2
+          ? project.links
+          : [
+              { url: "", label: "GitHub" },
+              { url: "", label: "Live" },
+              ...(project.links || []),
+            ].slice(0, 2),
+    });
     setIsEditing(true);
+    setAccordionValue((prev) =>
+      prev.includes("form") ? prev : [...prev, "form"]
+    );
   };
 
   const handleDelete = async (project: Project) => {
-    if (window.confirm('Are you sure you want to delete this project? Note: The image will remain in Cloudinary.')) {
-      try {
-        // Delete document from Firestore
-        await deleteDoc(doc(db, 'projects', project.id));
-
-        // Note: Cloudinary image deletion requires authenticated API calls
-        // which need a backend server. The image will remain in Cloudinary
-        // but won't be referenced in your portfolio.
-        // You can manually delete unused images from Cloudinary dashboard.
-
-        toast.success('Project deleted successfully');
-        fetchProjects();
-      } catch (error) {
-        console.error('Error deleting project:', error);
-        toast.error('Failed to delete project');
-      }
+    try {
+      await deleteDoc(doc(db, "projects", project.id));
+      toast.success("Project deleted successfully");
+      void fetchProjects();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project");
     }
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Header Card */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl p-6 text-white shadow-xl animate-slideUp">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
-            <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold">Projects Manager</h2>
-            <p className="text-gray-300 text-sm mt-1">Manage your portfolio projects</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Form Card */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl shadow-xl border-2 border-orange-500/30 overflow-hidden animate-slideUp" style={{ animationDelay: '100ms' }}>
-        <div className="px-6 py-5 border-b border-orange-500/30 bg-black/50">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-            </svg>
-            {isEditing ? 'Edit Project' : 'Add New Project'}
-          </h3>
-        </div>
-        <div className="p-6">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          {/* URL Fetch Section */}
-          <div className="p-6 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border-2 border-orange-500/30">
-            <label className="font-semibold text-white text-sm flex items-center gap-2 mb-3">
-              <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
-                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
-              </svg>
-              Quick Import from URL
-            </label>
-            <div className="flex gap-3">
-              <input
-                type="url"
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                className="flex-1 bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                placeholder="Enter website URL (e.g., https://example.com)"
-              />
-              <button
-                type="button"
-                onClick={handleFetchFromUrl}
-                disabled={fetchingUrl || !websiteUrl.trim()}
-                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {fetchingUrl ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Fetching...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd"/>
-                    </svg>
-                    <span>Fetch Info</span>
-                  </>
-                )}
-              </button>
-            </div>
-            <p className="text-xs text-gray-400 mt-2">
-              This will automatically extract title, description, and image from the website
+    <Accordion
+      type="multiple"
+      value={accordionValue}
+      onValueChange={setAccordionValue}
+      className="w-full"
+    >
+      <AccordionItem value="form" className="border-b">
+        <AccordionTrigger className="hover:no-underline">
+          <div className="text-left">
+            <p className="font-medium">
+              {isEditing ? "Edit Project" : "Add New Project"}
+            </p>
+            <p className="text-xs font-normal text-muted-foreground">
+              {isEditing
+                ? "Update project details below"
+                : "Fill in the form or import from a URL"}
             </p>
           </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <form onSubmit={handleSubmit} className="space-y-6 pt-1">
+            <div className="space-y-3 rounded-lg border p-4">
+              <Label htmlFor="websiteUrl" className="flex items-center gap-2">
+                <Sparkles className="size-4" />
+                AI Import from URL
+              </Label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  id="websiteUrl"
+                  type="url"
+                  value={websiteUrl}
+                  onChange={(e) => {
+                    setWebsiteUrl(e.target.value);
+                    setImportDraft(null);
+                  }}
+                  placeholder="https://example.com"
+                  className="flex-1"
+                  disabled={fetchingUrl}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => void handleFetchFromUrl()}
+                  disabled={fetchingUrl || !websiteUrl.trim()}
+                >
+                  {fetchingUrl ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="size-4" />
+                  )}
+                  {fetchingUrl ? "Importing…" : "Import"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Firecrawl scrapes the page, then AI drafts title, subtitle, and
+                description. Review before applying.
+              </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-300 text-sm">Title</label>
-              <input
-                type="text"
-                name="title"
-                value={currentProject.title}
+              {importDraft ? (
+                <div className="overflow-hidden rounded-lg border bg-muted/30">
+                  {importDraft.image ? (
+                    <div className="aspect-video w-full overflow-hidden bg-muted">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={importDraft.image}
+                        alt="Imported preview"
+                        className="size-full object-cover object-top"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="space-y-2 p-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {importDraft.source.aiPolished ? (
+                        <Badge variant="secondary">AI polished</Badge>
+                      ) : (
+                        <Badge variant="outline">Meta fallback</Badge>
+                      )}
+                      {importDraft.source.hasScreenshot ? (
+                        <Badge variant="outline">Screenshot</Badge>
+                      ) : null}
+                    </div>
+                    <p className="text-sm font-semibold leading-snug">
+                      {importDraft.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {importDraft.subtitle}
+                    </p>
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      {importDraft.description}
+                    </p>
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="flex-1"
+                        onClick={applyImportDraft}
+                      >
+                        <Check className="size-3.5" />
+                        Apply to form
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setImportDraft(null)}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={currentProject.title}
+                  onChange={handleInputChange}
+                  placeholder="Project title"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subtitle">Subtitle</Label>
+                <Input
+                  id="subtitle"
+                  name="subtitle"
+                  value={currentProject.subtitle}
+                  onChange={handleInputChange}
+                  placeholder="Category"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={currentProject.description}
                 onChange={handleInputChange}
-                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                placeholder="Enter project title"
+                placeholder="Describe your project..."
+                className="min-h-28"
                 required
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="font-medium text-gray-300 text-sm">Subtitle</label>
-              <input
-                type="text"
-                name="subtitle"
-                value={currentProject.subtitle}
-                onChange={handleInputChange}
-                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                placeholder="Enter project category"
-                required
-              />
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm">Description</label>
-            <textarea
-              name="description"
-              value={currentProject.description}
-              onChange={handleInputChange}
-              className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-white placeholder-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all min-h-[120px]"
-              placeholder="Describe your project..."
-              required
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="font-medium text-gray-300 text-sm">Project Image</label>
-            <div className="relative">
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="image">Project Image</Label>
+              <Input
+                id="image"
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="bg-black/50 border-2 border-orange-500/30 rounded-xl p-3 text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gradient-to-r file:from-orange-500 file:to-red-500 file:text-white file:font-semibold hover:file:from-orange-600 hover:file:to-red-600 transition-all w-full"
-                {...(!isEditing && { required: true })}
+                required={!isEditing && !currentProject.image}
               />
+              {currentProject.image && (
+                <div className="mt-2 overflow-hidden rounded-md border">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={currentProject.image}
+                    alt="Project preview"
+                    className="max-h-48 w-full object-cover"
+                  />
+                </div>
+              )}
             </div>
-            {currentProject.image && (
-              <div className="mt-4 p-4 bg-black/30 rounded-xl border border-orange-500/20">
-                <p className="text-sm font-medium text-gray-300 mb-2">Preview:</p>
-                <img
-                  src={currentProject.image}
-                  alt="Project preview"
-                  className="w-full max-w-xs h-auto rounded-lg shadow-md border-2 border-orange-500/20"
-                />
-              </div>
-            )}
-          </div>
 
-          <div className="flex flex-col gap-4 p-6 bg-black/30 rounded-xl border-2 border-orange-500/30">
-            <label className="font-semibold text-white text-sm flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
-                </svg>
-              </div>
-              Project Links
-            </label>
+            <Separator />
+
             <div className="space-y-4">
+              <Label className="flex items-center gap-2">
+                <Link2 className="size-4" />
+                Project Links
+              </Label>
               {currentProject.links.map((link, index) => (
-                <div key={index} className="p-4 bg-black/50 rounded-xl border-2 border-orange-500/20">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-300">
-                        Label <span className="text-gray-500 text-xs">(optional)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={link.label}
-                        onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
-                        className="bg-black/50 border-2 border-orange-500/20 rounded-lg p-2.5 text-white placeholder-gray-500 focus:border-orange-500 transition-all"
-                        placeholder="e.g., GitHub, Live Demo"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-300">
-                        URL <span className="text-gray-500 text-xs">(optional)</span>
-                      </label>
-                      <input
-                        type="url"
-                        value={link.url}
-                        onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                        className="bg-black/50 border-2 border-orange-500/20 rounded-lg p-2.5 text-white placeholder-gray-500 focus:border-orange-500 transition-all"
-                        placeholder="https://..."
-                      />
-                    </div>
+                <div
+                  key={index}
+                  className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor={`link-label-${index}`}>
+                      Label{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id={`link-label-${index}`}
+                      value={link.label}
+                      onChange={(e) =>
+                        handleLinkChange(index, "label", e.target.value)
+                      }
+                      placeholder="e.g. GitHub, Live Demo"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`link-url-${index}`}>
+                      URL{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </Label>
+                    <Input
+                      id={`link-url-${index}`}
+                      type="url"
+                      value={link.url}
+                      onChange={(e) =>
+                        handleLinkChange(index, "url", e.target.value)
+                      }
+                      placeholder="https://..."
+                    />
                   </div>
                 </div>
               ))}
             </div>
-          </div>
 
-          <div className="flex gap-4 mt-6 pt-6 border-t border-orange-500/30">
-            <button
-              type="submit"
-              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 hover:scale-[1.02]"
-            >
-              {isEditing ? '✓ Update Project' : '+ Add Project'}
-            </button>
-            {isEditing && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-6 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-300"
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
-        </div>
-      </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">
+                {isEditing ? (
+                  <>
+                    <Pencil className="size-4" />
+                    Update Project
+                  </>
+                ) : (
+                  <>
+                    <Plus className="size-4" />
+                    Add Project
+                  </>
+                )}
+              </Button>
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </form>
+        </AccordionContent>
+      </AccordionItem>
 
-      {/* Projects List */}
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-2xl shadow-xl border-2 border-orange-500/30 overflow-hidden animate-slideUp" style={{ animationDelay: '200ms' }}>
-        <div className="px-6 py-5 border-b border-orange-500/30 bg-black/50">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-              <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd"/>
-            </svg>
-            Your Projects ({projects.length})
-          </h3>
-        </div>
-        <div className="p-6">
+      <AccordionItem value="list" className="border-b-0">
+        <AccordionTrigger className="hover:no-underline">
+          <div className="flex items-center gap-2 text-left">
+            <span className="font-medium">Your Projects</span>
+            <Badge variant="secondary">{projects.length}</Badge>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-gray-400 font-medium">Loading projects...</p>
-              </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-64 w-full rounded-xl" />
+              ))}
             </div>
           ) : projects.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 bg-orange-500/20 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                </svg>
-              </div>
-              <p className="text-gray-300 text-lg font-medium">No projects yet</p>
-              <p className="text-gray-500 text-sm mt-2">Add your first project using the form above</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <FolderKanban className="mb-3 size-10 text-muted-foreground" />
+              <p className="font-medium text-muted-foreground">No projects yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Add your first project using the form above
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid gap-4 sm:grid-cols-2">
               {projects.map((project) => (
-                <div key={project.id} className="group relative bg-black/50 border-2 border-orange-500/30 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:border-orange-500/60 transition-all duration-300 hover:scale-[1.02]">
-                  <div className="h-48 overflow-hidden bg-black/30">
+                <Card
+                  key={project.id}
+                  className="gap-0 overflow-hidden py-0 shadow-none"
+                >
+                  <div className="aspect-video w-full overflow-hidden bg-muted">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={project.image}
                       alt={project.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      className="size-full object-cover object-top"
                     />
                   </div>
-                  <div className="p-5">
-                    <div className="mb-3">
-                      <span className="text-xs font-semibold text-orange-400 bg-orange-500/20 px-3 py-1 rounded-full border border-orange-500/30">
-                        {project.subtitle}
-                      </span>
-                    </div>
-                    <h4 className="font-bold text-lg text-white mb-2 line-clamp-1">{project.title}</h4>
-                    <p className="text-sm text-gray-300 line-clamp-2 mb-4">{project.description}</p>
-                    <div className="flex gap-2 pt-4 border-t border-orange-500/20">
-                      <button
-                        onClick={() => handleEdit(project)}
-                        className="flex-1 bg-orange-500/20 text-orange-400 p-2.5 rounded-xl hover:bg-orange-500/30 border border-orange-500/30 transition-all duration-300 flex items-center justify-center gap-2 font-medium"
-                        aria-label="Edit project"
-                      >
-                        <FaEdit />
-                        <span className="text-sm">Edit</span>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(project)}
-                        className="flex-1 bg-red-500/20 text-red-400 p-2.5 rounded-xl hover:bg-red-500/30 border border-red-500/30 transition-all duration-300 flex items-center justify-center gap-2 font-medium"
-                        aria-label="Delete project"
-                      >
-                        <FaTrash />
-                        <span className="text-sm">Delete</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  <CardHeader className="gap-1.5 px-4 py-3">
+                    <Badge
+                      variant="outline"
+                      className="max-w-full truncate font-normal"
+                      title={project.subtitle}
+                    >
+                      {project.subtitle}
+                    </Badge>
+                    <CardTitle
+                      className="line-clamp-2 text-base leading-snug"
+                      title={project.title}
+                    >
+                      {project.title}
+                    </CardTitle>
+                    <CardDescription
+                      className="line-clamp-3 text-xs leading-relaxed"
+                      title={project.description}
+                    >
+                      {project.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter className="gap-2 border-t px-4 py-3 [.border-t]:pt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleEdit(project)}
+                    >
+                      <Pencil className="size-3.5" />
+                      Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="size-3.5" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent size="sm">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete project?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This removes &ldquo;{project.title}&rdquo; from
+                            Firestore. The Cloudinary image will remain.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            variant="destructive"
+                            onClick={() => void handleDelete(project)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </CardFooter>
+                </Card>
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
-};
-
-export default ProjectsManager;
+}
