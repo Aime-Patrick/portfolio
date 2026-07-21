@@ -6,7 +6,8 @@ import {
 } from "@/lib/server/importResume";
 
 export const runtime = "nodejs";
-export const maxDuration = 90;
+// Vercel Hobby plan caps serverless function duration at 60s
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
