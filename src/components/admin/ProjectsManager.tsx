@@ -8,6 +8,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { toast } from "sonner";
 import {
@@ -338,7 +339,11 @@ export default function ProjectsManager() {
         await updateDoc(doc(db, "projects", id), projectDataToSave);
         toast.success("Project updated successfully");
       } else {
-        await addDoc(collection(db, "projects"), projectDataToSave);
+        // createdAt lets the assistant treat the newest project as the "current" one.
+        await addDoc(collection(db, "projects"), {
+          ...projectDataToSave,
+          createdAt: serverTimestamp(),
+        });
         toast.success("Project added successfully");
       }
 

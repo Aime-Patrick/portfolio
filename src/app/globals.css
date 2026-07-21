@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 /* Tell Tailwind where to find your templates (v4 way) */
 @source "../**/*.{js,ts,jsx,tsx,mdx}";
 
@@ -29,6 +31,10 @@
   --radius-xl: calc(var(--radius) + 4px);
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --secondary: oklch(96.7% 0.001 286.4);
+  --chart-1: oklch(64.6% 0.222 41.1);
+  --muted-foreground: oklch(55.2% 0.014 285.9);
+  --color-chart-1: var(--chart-1);
 }
 
 @keyframes accordion-down {
@@ -280,29 +286,29 @@ html{
 ================================ */
 :root{
     --header-height:.5rem;
-    
+
     /* BRAND - Your primary orange color (constant) */
     --first-color: hsl(18, 100%, 48%); /* #f44a00 */
     --first-color-hover: hsl(18, 90%, 42%);
-    
+
     /* SURFACES - Dark backgrounds */
     /* Surface token — do NOT name this --color-black (clashes with Tailwind `black`) */
     --surface-dark:hsl(0, 0%, 18%);
     --body-color:hsl(0, 0%, 8%);
     --container-color:hsl(0,0%,12%);
     --surface-elevated:hsl(0, 0%, 15%);
-    
+
     /* TEXT - Light colors on dark backgrounds */
     --title-color:hsl(0,0%,95%);
     --text-color:hsl(0,0%,70%);
     --text-color-light:hsl(0,0%,64%);
     --text-muted:hsl(0,0%,50%);
-    
+
     /* ACCENTS */
     --white-color:hsl(0,0%,95%);
     --black-color-light:hsl(0,0%,30%);
     --border-color:hsl(0,0%,20%);
-    
+
     /* TYPOGRAPHY */
     --body-font: var(--font-playpen), 'Playpen Sans', cursive;
     --biggest-font-size:1.5rem;
@@ -346,7 +352,6 @@ html{
     initial-value: 0turn;
 }
 
-
 /* ================================
    BASE STYLES
 ================================ */
@@ -378,7 +383,6 @@ html.admin-active body {
 ul{
     list-style: none;
 }
-
 
 img{
     display: block;
@@ -472,8 +476,6 @@ img{
    HEADER & NAV
 ================================ */
 
-
-
 /* ================================
    BUTTONS
 ================================ */
@@ -544,7 +546,6 @@ img{
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
-
 
 /* Scroll Animation Keyframes (kept global) */
 @keyframes scroll-down{

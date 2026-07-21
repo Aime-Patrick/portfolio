@@ -30,6 +30,105 @@ async function safeGetDoc(path: [string, string]) {
   }
 }
 
+/** Firestore Timestamp | number | ISO string → epoch millis (0 when unknown). */
+function toMillis(value: unknown): number {
+  if (value && typeof (value as { toMillis?: () => number }).toMillis === "function") {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
+
+/**
+ * Projects sorted newest-first. The most recently created project is flagged
+ * isCurrent so the assistant can answer "what's the current project?" reliably.
+ */
+async function listProjectsData() {
+  try {
+    const snap = await getAdminDb().collection("projects").get();
+    const items = snap.docs
+      .map((d) => {
+        const data = d.data();
+        return { doc: data, id: d.id, createdMs: toMillis(data.createdAt) };
+      })
+      .sort((a, b) => b.createdMs - a.createdMs);
+
+    const result = items.map((item, index) => ({
+      ...item.doc,
+      id: item.id,
+      createdAt: item.createdMs ? new Date(item.createdMs).toISOString() : null,
+      // Only the newest dated project is "current"; undated data stays unflagged.
+      isCurrent: index === 0 && item.createdMs > 0,
+    }));
+
+    return compact(result);
+  } catch (error) {
+    return [
+      {
+        error: error instanceof Error ? error.message : "Failed to load projects",
+        hint: "Configure FIREBASE_ADMIN_CONFIG_BASE64 for live data tools.",
+      },
+    ];
+  }
+}
+
+/** Compact GitHub contribution summary for the chat agent (no heatmap payload). */
+async function getGithubActivitySummary() {
+  try {
+    const username = process.env.GITHUB_USERNAME || "Aime-Patrick";
+    const year = new Date().getFullYear();
+    const response = await fetch(
+      `https://github-contributions-api.jogruber.de/v4/${username}?y=${year}`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!response.ok) {
+      throw new Error(`Contributions API responded ${response.status}`);
+    }
+
+    const json = (await response.json()) as {
+      total?: Record<string, number>;
+      contributions?: { date: string; count: number }[];
+    };
+
+    const days = (json.contributions ?? []).filter(
+      (d) => new Date(d.date) <= new Date()
+    );
+    const total = json.total?.[String(year)] ?? 0;
+
+    let streak = 0;
+    for (let i = days.length - 1; i >= 0; i--) {
+      if (days[i].count > 0) streak++;
+      else break;
+    }
+
+    const busiest = days.reduce(
+      (max, d) => (d.count > max.count ? d : max),
+      { date: "", count: 0 }
+    );
+    const activeDays = days.filter((d) => d.count > 0).length;
+
+    return {
+      username,
+      year,
+      totalContributions: total,
+      activeDays,
+      currentStreakDays: streak,
+      busiestDay: busiest.count > 0 ? busiest : null,
+      profileUrl: `https://github.com/${username}`,
+    };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error ? error.message : "Failed to load GitHub activity",
+      hint: "GitHub activity is temporarily unavailable; suggest visiting the GitHub profile directly.",
+    };
+  }
+}
+
 async function safeGetCollection(name: string, limit = 12) {
   try {
     const snap = await getAdminDb().collection(name).limit(limit).get();
@@ -60,9 +159,9 @@ export function getToolsForScope(scope: ChatScope) {
     }),
     listProjects: tool({
       description:
-        "List portfolio projects. Use only when the user asks about projects, work, or case studies — never for greetings.",
+        "List portfolio projects, newest first. The first item (isCurrent: true, most recent createdAt) is Patrick's current/latest project. Use when the user asks about projects, current/latest work, or case studies — never for greetings.",
       inputSchema: z.object({}),
-      execute: async () => safeGetCollection("projects"),
+      execute: async () => listProjectsData(),
     }),
     listServices: tool({
       description:
@@ -75,6 +174,12 @@ export function getToolsForScope(scope: ChatScope) {
         "List certificates. Use only when the user asks about certificates or credentials — never for greetings.",
       inputSchema: z.object({}),
       execute: async () => safeGetCollection("certificates"),
+    }),
+    getGithubActivity: tool({
+      description:
+        "Get Patrick's GitHub contribution summary for this year (total contributions, most active recent day, current streak). Use only when the user asks about GitHub, coding activity, open source, or how active he is — never for greetings.",
+      inputSchema: z.object({}),
+      execute: async () => getGithubActivitySummary(),
     }),
   };
 

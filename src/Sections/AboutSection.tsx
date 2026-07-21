@@ -10,6 +10,7 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import Dialog from "../components/Dialog";
+import GithubActivity from "../components/GithubActivity";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -282,6 +283,13 @@ const AboutSection: React.FC = () => {
     return link?.url || "https://www.linkedin.com/";
   };
 
+  const getGithubUrl = () => {
+    const link = profileData.socialLinks?.find(
+      (item) => item.platform.toLowerCase() === "github"
+    );
+    return link?.url || "https://github.com/Aime-Patrick";
+  };
+
   const experiences = getExperiences();
   const isDefaultBio = aboutData.bio === BIO_SHORT;
   const bioPreview = isDefaultBio
@@ -455,6 +463,8 @@ const AboutSection: React.FC = () => {
               )}
             </div>
           )}
+
+          <GithubActivity profileUrl={getGithubUrl()} />
 
           <div className="about__buttons" data-about-reveal>
             <a

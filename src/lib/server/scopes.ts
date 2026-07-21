@@ -35,7 +35,7 @@ You have these tools only (names must match exactly):
 - listRecentMessages — inbox preview
 - getSiteSettings — title, description, keywords, chatbot toggle, colors
 - auditCmsSeo — on-page CMS SEO score from settings + content completeness
-- getPortfolioProfile, getAbout, listProjects, listServices, listCertificates — public content reads
+- getPortfolioProfile, getAbout, listProjects, listServices, listCertificates, getGithubActivity — public content reads
 
 You cannot: write/delete Firestore, call Google Analytics/Search Console, run Lighthouse, change DNS, or invent APIs.
 
