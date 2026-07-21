@@ -1,155 +1,117 @@
 # Portfolio
 
-This is a personal portfolio website built with **React** and **Tailwind CSS**. It showcases your skills, projects, and contact information in a modern, responsive design.
+Personal portfolio and CMS for **Aime Patrick Ndagijimana**, built with **Next.js 15**, **React 19**, and **Tailwind CSS**. Public site plus an authenticated admin dashboard with an AI copilot.
 
 ## Features
 
-- **Home:** Introduction, profile image, and social links.
-- **About:** Experience, skills, and background.
-- **Services:** Highlights of your offerings (Web Design, Development, Mobile App).
-- **Projects:** Featured projects with images, descriptions, and links.
-- **Contact:** Contact form and social links.
-- **AI Chatbot:** N8N-powered chatbot with GitHub and portfolio scraping for comprehensive visitor assistance.
-- **Admin Dashboard:** Full CMS for managing content (projects, services, profile, messages).
-- **Theme Toggle:** Switch between light and dark modes.
-- **Responsive Design:** Optimized for desktop and mobile.
-- **Animated Transitions:** Smooth scroll and reveal animations.
-- **SEO Optimized:** Enterprise-level SEO with structured data, social media optimization, and performance enhancements.
-- **PWA Ready:** Progressive Web App capabilities with offline support preparation.
+- **Public portfolio** — Home, About, Services, Projects, Certificates, Contact
+- **Admin CMS** — Manage profile, content, messages, and site settings
+- **AI assistants** — [assistant-ui](https://www.assistant-ui.com/) chat for visitors (modal) and admins (resizable sidebar / sheet)
+- **NVIDIA NIM** — Server-side chat via OpenAI-compatible API (`/api/chat`)
+- **CMS SEO audit** — Admin tool scores on-page meta and content completeness
+- **Firecrawl imports** — Pull project drafts from a URL; import resume data into profile/about
+- **Firebase** — Auth, Firestore CMS data, Admin SDK for server tools
+- **EmailJS** — Contact form delivery
+- **Cloudinary** — Image uploads from the admin UI
 
 ## Tech Stack
 
-### Frontend
-- [React 19](https://reactjs.org/) with TypeScript
-- [Vite](https://vitejs.dev/) - Build tool
-- [Tailwind CSS 4](https://tailwindcss.com/) - Styling
-- [Framer Motion](https://www.framer.com/motion/) - Animations
-- [React Router DOM](https://reactrouter.com/) - Routing
-- [React Icons](https://react-icons.github.io/react-icons/) - Icons
-
-### Backend & Services
-- [Firebase](https://firebase.google.com/) - Authentication, Firestore Database, Storage
-- [EmailJS](https://www.emailjs.com/) - Contact form
-- [N8N](https://n8n.io/) - Chatbot automation
+| Area | Stack |
+|------|--------|
+| App | Next.js 15 (App Router), React 19, TypeScript |
+| UI | Tailwind CSS 4, shadcn/ui, Framer Motion, GSAP |
+| AI | assistant-ui, Vercel AI SDK, NVIDIA Integrate API |
+| Data | Firebase Auth + Firestore (+ Admin SDK) |
+| Media / mail | Cloudinary, EmailJS |
+| Scraping | Firecrawl |
 
 ## Getting Started
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd portfolio
-   ```
+1. **Clone and install**
 
-2. **Install dependencies:**
    ```bash
+   git clone https://github.com/Aime-Patrick/portfolio.git
+   cd portfolio
    npm install
    ```
 
-3. **Set up environment variables:**
-   - Create a `.env` file in the root directory
-   - Add your Firebase and N8N credentials
-   - See `ENVIRONMENT_VARIABLES.md` for details
+2. **Environment**
 
-4. **Start the development server:**
+   Copy `.env.example` to `.env.local` and fill in values:
+
+   | Variable | Purpose |
+   |----------|---------|
+   | `NEXT_PUBLIC_FIREBASE_CONFIG_BASE64` | Base64 of the Firebase web config JSON |
+   | `FIREBASE_ADMIN_CONFIG_BASE64` | Base64 of the service account JSON (server tools / admin chat) |
+   | `NVIDIA_API_KEY` | NVIDIA NIM API key |
+   | `NVIDIA_MODEL` | Optional; default `meta/llama-3.1-8b-instruct` |
+   | `FIRECRAWL_API_KEY` | Project / resume URL import |
+   | `NEXT_PUBLIC_CLOUDINARY_*` | Image uploads |
+   | `NEXT_PUBLIC_EMAILJS_*` | Contact form |
+
+   Encode JSON configs with `scripts/encode-firebase-config.mjs` or your own base64 encoder.
+
+   **Do not commit** `.env.local`, `firebase-web.json`, or service-account JSON files.
+
+3. **Develop**
+
    ```bash
    npm run dev
    ```
 
-5. **Build for production:**
+   Open [http://localhost:3000](http://localhost:3000).
+
+4. **Production**
+
    ```bash
    npm run build
+   npm start
    ```
 
-## Additional Setup
+## Routes
 
-- **Environment Variables:** See `ENVIRONMENT_SETUP.md` for required environment variables setup
-- **Firebase Setup:** See `FIREBASE_SETUP.md` for detailed Firebase configuration
-- **Cloudinary Setup:** See `CLOUDINARY_SETUP_GUIDE.md` for image upload configuration (5 min setup)
-- **N8N Chatbot:** See `AI_AGENT_SYSTEM_PROMPT.md` for chatbot integration guide
-- **SEO Optimization:** See `SEO_SUMMARY.md` for comprehensive SEO improvements
-- **Deployment:** See `DEPLOYMENT_CHECKLIST.md` for complete deployment guide
-- **Project Audit:** See `PROJECT_AUDIT_REPORT.md` for comprehensive project analysis
+| Path | Description |
+|------|-------------|
+| `/` | Public portfolio |
+| `/login` | Admin login |
+| `/admin` | Protected CMS (`?section=dashboard\|content\|messages\|settings\|…`) |
+| `/api/chat` | Streaming chat (scopes: `public` \| `admin`) |
+| `/api/projects/import` | Firecrawl + AI project draft |
+| `/api/profile/import-resume` | Firecrawl + AI resume import |
 
 ## Folder Structure
 
 ```
 portfolio/
 ├── src/
-│   ├── components/          # React components
-│   │   ├── admin/          # Admin dashboard components
-│   │   ├── Chatbot.tsx     # N8N-powered chatbot
-│   │   ├── Header.tsx      # Main navigation
-│   │   └── ...
-│   ├── Sections/           # Main portfolio sections
-│   │   ├── HomeSection.tsx
-│   │   ├── AboutSection.tsx
-│   │   ├── ServicesSection.tsx
-│   │   ├── ProjectsSection.tsx
-│   │   └── ContactSection.tsx
-│   ├── firebase.ts         # Firebase configuration
-│   ├── App.tsx            # Main app with routing
-│   ├── main.tsx           # Entry point
-│   └── index.css          # Global styles
-├── public/                 # Static assets
-├── scripts/               # Utility scripts
-├── firestore.rules        # Firestore security rules
+│   ├── app/                 # Next.js App Router (pages + API routes)
+│   ├── components/
+│   │   ├── admin/           # CMS managers
+│   │   ├── assistant-ui/    # Thread, sidebar, modal, DotMatrix
+│   │   └── ui/              # shadcn primitives
+│   ├── Sections/            # Public portfolio sections
+│   ├── lib/server/          # Chat handler, tools, imports, Firebase Admin
+│   └── firebase.ts          # Client Firebase
+├── public/                  # Static assets
+├── scripts/                 # Admin / config helpers
+├── .env.example
+├── next.config.ts
 └── package.json
 ```
 
-## Key Routes
+## Admin copilot
 
-- `/` - Main portfolio (public)
-- `/login` - Admin login
-- `/admin` - Admin dashboard (protected)
-  - `?section=dashboard` - Dashboard home
-  - `?section=projects` - Manage projects
-  - `?section=services` - Manage services
-  - `?section=profile` - Edit profile
-  - `?section=messages` - View messages
-  - `?section=settings` - Site settings
+The admin assistant can read live CMS data (stats, inbox, settings, content) and run **`auditCmsSeo`** for an on-page SEO score. It cannot invent tools (e.g. Analytics) or write Firestore — use the CMS UI for edits.
 
-## SEO Features
-
-This portfolio includes enterprise-level SEO optimization:
-
-### Technical SEO
-- ✅ **robots.txt** - Search engine crawler instructions
-- ✅ **sitemap.xml** - Complete site structure with images
-- ✅ **manifest.json** - PWA configuration
-- ✅ **Structured Data** - 3 Schema.org JSON-LD schemas (Person, WebSite, ProfessionalService)
-- ✅ **Performance Headers** - Preconnect, DNS prefetch, caching
-- ✅ **Security Headers** - XSS protection, frame options, content type
-
-### On-Page SEO
-- ✅ **Optimized Meta Tags** - Title, description, keywords
-- ✅ **Open Graph Tags** - Facebook/LinkedIn preview optimization
-- ✅ **Twitter Cards** - Twitter preview optimization
-- ✅ **Canonical URLs** - Proper URL structure
-- ✅ **Mobile Optimization** - Responsive design with proper viewport
-
-### Target Keywords
-- Full Stack Developer Rwanda
-- Software Engineer Kigali
-- React Developer Portfolio
-- Node.js Developer
-- TypeScript Expert
-- Web Development Services Rwanda
-
-### SEO Score: 9/10 ⭐
-
-For detailed information:
-- `SEO_SUMMARY.md` - Overview of all SEO improvements
-- `SEO_ACTION_CHECKLIST.md` - Post-deployment tasks
-- `SEO_IMPROVEMENTS.md` - Detailed analysis and strategy
+Prefer a faster NIM model for chat (8B). Use a larger model only if you need heavier reasoning and accept higher latency.
 
 ## Customization
 
-- **Content:** Use the admin dashboard at `/admin` to update projects, services, and profile
-- **Styling:** Modify Tailwind classes or update `index.css` for custom styles
-- **Chatbot:** Configure your N8N workflow to customize chatbot behavior
-- **Colors:** Update CSS variables in `index.css` (`:root` section)
-- **SEO:** Update meta tags in `index.html` for your specific keywords
+- **Content** — `/admin` CMS
+- **Styles** — `src/app/globals.css` and Tailwind utilities
+- **Chat behavior** — `src/lib/server/scopes.ts` (prompts) and `src/lib/server/tools.ts` (tools)
+- **Site meta** — Admin → Settings (title, description, keywords)
 
----
+## License
 
-Feel free to use and modify this portfolio for your own needs. Happy coding! 🚀
+Private / personal use unless otherwise stated.

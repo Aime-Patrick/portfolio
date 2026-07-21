@@ -126,8 +126,10 @@ export default function AboutManager() {
       const aboutSnapshot = await getDoc(aboutDoc);
 
       if (aboutSnapshot.exists()) {
-        const data = aboutSnapshot.data() as AboutData & {
+        const data = aboutSnapshot.data() as Omit<AboutData, "experience"> & {
           experience?: Experience[] | string;
+          skills?: string[];
+          image?: string;
         };
         let experiences: Experience[] = [];
         if (Array.isArray(data.experience)) {
@@ -146,7 +148,12 @@ export default function AboutManager() {
         }
 
         setAboutData({
-          ...data,
+          name: data.name || "",
+          title: data.title || "",
+          bio: data.bio || "",
+          education: data.education || "",
+          image: data.image || "",
+          cloudinaryPublicId: data.cloudinaryPublicId,
           experience: experiences,
           skills: data.skills || [],
         });

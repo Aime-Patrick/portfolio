@@ -323,7 +323,9 @@ export default function ProjectsManager() {
         }
       }
 
-      const projectDataToSave: Record<string, unknown> = {
+      const projectDataToSave: {
+        [key: string]: string | { url: string; label: string }[] | undefined;
+      } = {
         ...projectData,
         links: validLinks,
         image: imageUrl,

@@ -49,8 +49,9 @@ function lastUserText(messages: UIMessage[]): string {
       .trim();
     if (text) return text;
     // Legacy content field fallback
-    if (typeof (msg as { content?: unknown }).content === "string") {
-      return String((msg as { content: string }).content).trim();
+    const legacy = msg as unknown as { content?: unknown };
+    if (typeof legacy.content === "string") {
+      return legacy.content.trim();
     }
   }
   return "";

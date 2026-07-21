@@ -190,7 +190,9 @@ export default function CertificatesManager() {
         toast.success("Image uploaded!");
       }
 
-      const certificateDataToSave: Record<string, unknown> = {
+      const certificateDataToSave: {
+        [key: string]: string | undefined;
+      } = {
         ...certificateData,
         image: imageUrl,
       };
