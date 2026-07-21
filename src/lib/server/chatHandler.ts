@@ -10,8 +10,6 @@ import {
   PUBLIC_SYSTEM_PROMPT,
   ADMIN_SYSTEM_PROMPT,
 } from "./scopes";
-import { verifyAdminToken } from "./firebaseAdmin";
-import { getToolsForScope } from "./tools";
 
 const nvidia = createOpenAI({
   baseURL: "https://integrate.api.nvidia.com/v1",
@@ -91,6 +89,8 @@ export async function prepareChat(ctx: ChatContext) {
 
   if (scope === "admin") {
     try {
+      // Lazy-load so public /api/chat does not pull firebase-admin → jwks-rsa → jose.
+      const { verifyAdminToken } = await import("./firebaseAdmin");
       await verifyAdminToken(ctx.authorization);
     } catch (error) {
       return {
@@ -106,7 +106,10 @@ export async function prepareChat(ctx: ChatContext) {
   const system = scope === "admin" ? ADMIN_SYSTEM_PROMPT : PUBLIC_SYSTEM_PROMPT;
   const userText = lastUserText(messages);
   const chitchat = isChitchat(userText);
-  const tools = getToolsForScope(scope);
+  // Lazy-load tools (and transitively firebase-admin) only when a tool round is possible.
+  const tools = chitchat
+    ? undefined
+    : (await import("./tools")).getToolsForScope(scope);
   // Keep recent turns only — long threads inflate prompt + latency.
   const recentMessages = messages.slice(-12);
 

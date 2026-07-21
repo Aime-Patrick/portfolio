@@ -8,7 +8,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Hide the Next.js “N” badge during local dev (errors still surface)
   devIndicators: false,
-  serverExternalPackages: ["firecrawl", "undici"],
+  // Keep firebase-admin / jwks-rsa out of the webpack bundle so Node can load them.
+  // Pair with package.json overrides pinning jwks-rsa→jose@4 (CJS) to avoid ERR_REQUIRE_ESM on Vercel.
+  serverExternalPackages: ["firecrawl", "undici", "firebase-admin", "jwks-rsa", "jose"],
   webpack: (config) => {
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
