@@ -345,7 +345,7 @@ const HomeSection: React.FC = () => {
                 <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[var(--first-color)] sm:mb-3 sm:text-xs sm:tracking-[0.2em]">
                   {panel.eyebrow}
                 </p>
-                <h1 className="mb-3 font-bold leading-[1.1] text-[var(--title-color)] text-[1.65rem] sm:mb-4 sm:text-4xl sm:leading-[1.05] lg:text-5xl">
+                <h1 className="mb-3 font-bold leading-[1.1] text-[var(--title-color)] text-[1.2rem] sm:mb-4 sm:text-2xl sm:leading-[1.05] lg:text-3xl">
                   {i === 0 ? (
                     <>
                       <span className="mb-1.5 block text-base font-medium text-[var(--text-color)] sm:mb-2 sm:text-xl">
