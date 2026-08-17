@@ -219,7 +219,7 @@ const HomeSection: React.FC = () => {
       eyebrow: "Available for projects",
       title: (
         <>
-          I build products that turn visitors into customers.
+          I build products that turn ideas into reality.
         </>
       ),
       body: (
